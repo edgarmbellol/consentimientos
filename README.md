@@ -1,6 +1,8 @@
-# Sistema de Consentimientos Informados
+# Sistema de Consentimientos Informados 🏥
 
 Sistema digital para la gestión de consentimientos informados del Hospital Divino Salvador de Sopó.
+
+**Repositorio:** [https://github.com/edgarmbellol/consentimientos.git](https://github.com/edgarmbellol/consentimientos.git)
 
 ## Características
 
@@ -32,6 +34,14 @@ Sistema digital para la gestión de consentimientos informados del Hospital Divi
 - Python 3.8 o superior
 - Node.js 16 o superior
 - npm o yarn
+- Docker y Docker Compose (recomendado)
+
+### Clonar el Repositorio
+
+```bash
+git clone https://github.com/edgarmbellol/consentimientos.git
+cd consentimientos
+```
 
 ### Backend
 
