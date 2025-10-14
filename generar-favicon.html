@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Favicon</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            text-align: center;
+        }
+        canvas {
+            border: 2px solid #4A90E2;
+            margin: 20px 0;
+        }
+        button {
+            background: #4A90E2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #2C5282;
+        }
+        .instructions {
+            text-align: left;
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🏥 Generador de Favicon</h1>
+    <p>Hospital Divino Salvador de Sopó</p>
+    
+    <canvas id="faviconCanvas" width="32" height="32"></canvas>
+    
+    <div>
+        <button onclick="generarYDescargar()">Descargar favicon.ico</button>
+    </div>
+    
+    <div class="instructions">
+        <h3>Instrucciones:</h3>
+        <ol>
+            <li>Haz clic en "Descargar favicon.ico"</li>
+            <li>Guarda el archivo en: <code>frontend/public/favicon.ico</code></li>
+            <li>Recarga el navegador (Ctrl+F5 o Cmd+R)</li>
+            <li>Los errores deberían desaparecer</li>
+        </ol>
+    </div>
+
+    <script>
+        // Dibujar el favicon en el canvas
+        function dibujarFavicon() {
+            const canvas = document.getElementById('faviconCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Fondo azul
+            ctx.fillStyle = '#4A90E2';
+            ctx.fillRect(0, 0, 32, 32);
+            
+            // Cruz médica blanca
+            ctx.fillStyle = 'white';
+            ctx.fillRect(13, 8, 6, 16);  // Vertical
+            ctx.fillRect(8, 13, 16, 6);   // Horizontal
+            
+            // Símbolo de salud
+            ctx.beginPath();
+            ctx.arc(16, 24, 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Generar y descargar el favicon
+        function generarYDescargar() {
+            const canvas = document.getElementById('faviconCanvas');
+            
+            // Convertir a blob
+            canvas.toBlob(function(blob) {
+                // Crear enlace de descarga
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'favicon.ico';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                alert('¡Favicon descargado! Cópialo a frontend/public/favicon.ico');
+            }, 'image/png');
+        }
+        
+        // Dibujar al cargar la página
+        dibujarFavicon();
+    </script>
+</body>
+</html>
+
+

@@ -49,6 +49,7 @@ export interface ConsentTemplate {
 export interface ConsentFormData {
   template_id: string;
   patient_data: Record<string, any>;
+  patient_photo?: string | null;
   consent_responses: Record<string, any>;
   signatures: Record<string, string>;
   filled_at?: string;
@@ -58,6 +59,7 @@ export interface ConsentFormResponse {
   id: string;
   template_id: string;
   patient_data: Record<string, any>;
+  patient_photo?: string | null;
   consent_responses: Record<string, any>;
   signatures: Record<string, string>;
   filled_at: string;

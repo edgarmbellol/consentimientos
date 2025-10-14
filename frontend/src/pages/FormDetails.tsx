@@ -91,75 +91,112 @@ const FormDetails: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center">
-          <button
-            onClick={() => navigate('/admin/forms')}
-            className="mr-4 p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-hospital-darkBlue">
-              {form.template_title}
-            </h1>
-            <p className="text-gray-600">
-              Consentimiento Informado - {formatDate(form.filled_at)}
-            </p>
+      <div className="mb-6 no-print">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center">
+            <button
+              onClick={() => navigate('/admin/forms')}
+              className="mr-4 p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-bold text-hospital-darkBlue truncate">
+                {form.template_title}
+              </h1>
+              <p className="text-sm sm:text-base text-gray-600 truncate">
+                Consentimiento Informado - {formatDate(form.filled_at)}
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2">
+            <button
+              onClick={handlePrint}
+              className="btn-secondary flex items-center justify-center w-full sm:w-auto"
+            >
+              <Printer className="w-4 h-4 mr-2" />
+              Imprimir
+            </button>
+            <button
+              onClick={handleDownload}
+              className="btn-primary flex items-center justify-center w-full sm:w-auto"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Descargar PDF
+            </button>
           </div>
         </div>
-        
-        <div className="flex space-x-2">
-          <button
-            onClick={handlePrint}
-            className="btn-secondary flex items-center"
-          >
-            <Printer className="w-4 h-4 mr-2" />
-            Imprimir
-          </button>
-          <button
-            onClick={handleDownload}
-            className="btn-primary flex items-center"
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Descargar PDF
-          </button>
-        </div>
+      </div>
+
+      {/* Título para impresión */}
+      <div className="hidden print:block mb-6 text-center">
+        <h1 className="text-2xl font-bold text-hospital-darkBlue mb-2">
+          {form.template_title}
+        </h1>
+        <p className="text-gray-600">
+          Fecha: {formatDate(form.filled_at)}
+        </p>
       </div>
 
       {/* Header del Hospital */}
       <div className="card bg-gradient-to-r from-hospital-blue to-hospital-darkBlue text-white print:bg-hospital-blue">
-        <div className="flex items-center mb-4">
-          <Shield className="w-8 h-8 mr-3" />
-          <div>
-            <h2 className="text-xl font-bold">{template.hospital_info.name}</h2>
-            <p className="text-blue-100">NIT: {template.hospital_info.nit}</p>
+        <div className="flex flex-col sm:flex-row sm:items-center mb-4">
+          <div className="flex items-center mb-3 sm:mb-0">
+            <Shield className="w-6 h-6 sm:w-8 sm:h-8 mr-3 flex-shrink-0" />
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg sm:text-xl font-bold truncate">{template.hospital_info.name}</h2>
+              <p className="text-blue-100 text-sm sm:text-base">NIT: {template.hospital_info.nit}</p>
+            </div>
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 text-sm">
           <div className="flex items-center">
-            <FileText className="w-4 h-4 mr-2" />
+            <FileText className="w-4 h-4 mr-2 flex-shrink-0" />
             <span>Código: {template.document_metadata.code}</span>
           </div>
           <div className="flex items-center">
-            <Calendar className="w-4 h-4 mr-2" />
+            <Calendar className="w-4 h-4 mr-2 flex-shrink-0" />
             <span>Versión: {template.document_metadata.version}</span>
           </div>
-          <div className="flex items-center">
+          <div className="flex items-center sm:col-span-2 lg:col-span-1">
+            <Calendar className="w-4 h-4 mr-2 flex-shrink-0" />
             <span>Fecha: {formatDate(form.filled_at)}</span>
           </div>
         </div>
       </div>
 
+      {/* Foto del Paciente */}
+      {form.patient_photo && (
+        <div className="card">
+          <h2 className="text-lg sm:text-xl font-semibold text-hospital-darkBlue mb-4 flex items-center">
+            <User className="w-5 h-5 mr-2 flex-shrink-0" />
+            FOTO DEL PACIENTE
+          </h2>
+          <div className="flex justify-center">
+            <div className="relative rounded-lg overflow-hidden border-2 border-gray-200 w-full max-w-sm sm:max-w-md">
+              <img 
+                src={form.patient_photo} 
+                alt="Foto del paciente" 
+                className="patient-photo-print w-full h-auto object-contain"
+              />
+            </div>
+          </div>
+          <p className="text-xs text-gray-500 mt-3 text-center">
+            Fotografía tomada al momento de firmar el consentimiento
+          </p>
+        </div>
+      )}
+
       {/* Datos del Paciente */}
       <div className="card">
-        <h2 className="text-xl font-semibold text-hospital-darkBlue mb-4 flex items-center">
-          <User className="w-5 h-5 mr-2" />
+        <h2 className="text-lg sm:text-xl font-semibold text-hospital-darkBlue mb-4 flex items-center">
+          <User className="w-5 h-5 mr-2 flex-shrink-0" />
           DATOS DEL PACIENTE
         </h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {template.patient_fields
             .sort((a, b) => a.order - b.order)
             .map((field) => {
@@ -315,9 +352,16 @@ const FormDetails: React.FC = () => {
         </h2>
         
         <div className="space-y-6">
-          {template.signature_blocks.map((block, index) => (
-            <div key={index} className="border border-gray-200 rounded-lg p-4">
-              <h3 className="font-medium text-gray-900 mb-4">{block.label}</h3>
+          {template.signature_blocks.map((block, index) => {
+            const isOptional = block.role === 'acompanante';
+            return (
+              <div key={index} className="border border-gray-200 rounded-lg p-4">
+                <h3 className="font-medium text-gray-900 mb-4">
+                  {block.label}
+                  {isOptional && (
+                    <span className="ml-2 text-sm text-gray-500 font-normal">(Opcional)</span>
+                  )}
+                </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
@@ -340,14 +384,25 @@ const FormDetails: React.FC = () => {
               
               <div>
                 <label className="label text-gray-700">FIRMA DIGITAL</label>
-                <div className="p-4 bg-gray-50 rounded-lg border border-dashed">
-                  <span className="text-gray-900">
-                    {form.signatures[`${block.role}_signature`] || 'Firma no disponible'}
-                  </span>
-                </div>
+                {form.signatures[`${block.role}_signature`] ? (
+                  <div className="p-4 bg-gray-50 rounded-lg border">
+                    <img 
+                      src={form.signatures[`${block.role}_signature`]} 
+                      alt={`Firma de ${block.label}`}
+                      className="signature-print max-h-32 mx-auto"
+                    />
+                  </div>
+                ) : (
+                  <div className="p-4 bg-gray-50 rounded-lg border border-dashed">
+                    <span className="text-gray-500">
+                      {isOptional ? 'Sin firma (opcional)' : 'Firma no disponible'}
+                    </span>
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
       </div>
 

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { templatesAPI, consentFormsAPI } from '../services/api';
+import { templatesAPI, consentFormsAPI, patientsAPI } from '../services/api';
 import { ConsentTemplate, TemplateField } from '../types';
+import SignaturePad from '../components/SignaturePad';
+import PhotoCapture from '../components/PhotoCapture';
 import { 
   ArrowLeft, 
   Save, 
@@ -35,6 +37,10 @@ const ConsentForm: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [patientPhoto, setPatientPhoto] = useState<string | null>(null);
+  const [signatures, setSignatures] = useState<Record<string, string>>({});
+  const [searchingPatient, setSearchingPatient] = useState(false);
+  const [patientFound, setPatientFound] = useState(false);
 
   useEffect(() => {
     if (templateId) {
@@ -56,11 +62,143 @@ const ConsentForm: React.FC = () => {
     }
   };
 
+  const searchPatient = async (documento: string) => {
+    if (!documento || documento.trim().length === 0) {
+      return;
+    }
+
+    try {
+      setSearchingPatient(true);
+      setPatientFound(false);
+      
+      const patientInfo = await patientsAPI.getByDocument(documento.trim());
+      
+      // Llenar automáticamente los campos del paciente
+      if (patientInfo) {
+        // Buscar el campo de nombre y llenarlo
+        const nombreField = template?.patient_fields.find(f => 
+          f.label.toLowerCase().includes('nombre')
+        );
+        if (nombreField) {
+          setValue(`patient_data.${nombreField.id}`, patientInfo.nombre);
+        }
+
+        // Buscar el campo de sexo y llenarlo
+        const sexoField = template?.patient_fields.find(f => 
+          f.label.toLowerCase().includes('sexo')
+        );
+        if (sexoField) {
+          setValue(`patient_data.${sexoField.id}`, patientInfo.sexo);
+        }
+
+        // Buscar el campo de fecha de nacimiento y llenarlo
+        const fechaNacField = template?.patient_fields.find(f => 
+          f.label.toLowerCase().includes('fecha') && f.label.toLowerCase().includes('nacimiento')
+        );
+        if (fechaNacField && patientInfo.fecha_nacimiento) {
+          setValue(`patient_data.${fechaNacField.id}`, patientInfo.fecha_nacimiento);
+        }
+
+        // Buscar el campo de edad y llenarlo
+        const edadField = template?.patient_fields.find(f => 
+          f.label.toLowerCase().includes('edad')
+        );
+        if (edadField && patientInfo.edad) {
+          setValue(`patient_data.${edadField.id}`, patientInfo.edad.toString());
+        }
+
+        // Buscar el campo de teléfono y llenarlo
+        const telefonoField = template?.patient_fields.find(f => 
+          f.label.toLowerCase().includes('telefono') || f.label.toLowerCase().includes('teléfono')
+        );
+        if (telefonoField && patientInfo.telefono) {
+          setValue(`patient_data.${telefonoField.id}`, patientInfo.telefono);
+        }
+
+        setPatientFound(true);
+        console.log('✅ Datos del paciente cargados:', patientInfo);
+      }
+    } catch (err: any) {
+      console.error('Error buscando paciente:', err);
+      if (err.response?.status === 404) {
+        alert('Paciente no encontrado en el sistema. Por favor, ingrese los datos manualmente.');
+      } else {
+        alert('Error al buscar el paciente. Por favor, intente nuevamente.');
+      }
+      setPatientFound(false);
+    } finally {
+      setSearchingPatient(false);
+    }
+  };
+
   const renderField = (field: TemplateField) => {
     const fieldName = `patient_data.${field.id}` as any;
     
+    // Campo especial para N° DE IDENTIFICACIÓN con búsqueda automática
+    const isDocumentoField = field.label.toLowerCase().includes('identificación') || 
+                             field.label.toLowerCase().includes('identificacion');
+    
+    // Campo especial para TIPO REGIMEN como select
+    const isTipoRegimenField = field.label.toLowerCase().includes('tipo') && 
+                                field.label.toLowerCase().includes('regimen');
+    
     switch (field.type) {
       case 'text':
+        if (isDocumentoField) {
+          return (
+            <div className="flex gap-2">
+              <input
+                {...register(fieldName, { 
+                  required: field.required ? `${field.label} es requerido` : false 
+                })}
+                className="input-field flex-1"
+                placeholder={field.placeholder}
+                onBlur={(e) => searchPatient(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const documento = watch(fieldName);
+                  searchPatient(documento);
+                }}
+                disabled={searchingPatient}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 flex items-center gap-2 whitespace-nowrap"
+              >
+                {searchingPatient ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Buscando...
+                  </>
+                ) : (
+                  <>
+                    🔍 Buscar
+                  </>
+                )}
+              </button>
+              {patientFound && (
+                <div className="flex items-center text-green-600">
+                  <CheckCircle className="w-5 h-5" />
+                </div>
+              )}
+            </div>
+          );
+        }
+        
+        if (isTipoRegimenField) {
+          return (
+            <select
+              {...register(fieldName, { 
+                required: field.required ? `${field.label} es requerido` : false 
+              })}
+              className="input-field"
+            >
+              <option value="">Seleccione...</option>
+              <option value="Contributivo">Contributivo</option>
+              <option value="Subsidiado">Subsidiado</option>
+            </select>
+          );
+        }
+        
         return (
           <input
             {...register(fieldName, { 
@@ -126,21 +264,12 @@ const ConsentForm: React.FC = () => {
         );
       
       case 'signature':
+        // Las firmas se manejan en la sección de "Firmas del Consentimiento" con SignaturePad
         return (
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-            <div className="text-gray-500 mb-2">
-              <svg className="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-              </svg>
-            </div>
-            <p className="text-sm text-gray-500">Área de firma digital</p>
-            <button
-              type="button"
-              onClick={() => handleSignature(field.id)}
-              className="mt-2 text-hospital-blue hover:text-hospital-darkBlue text-sm font-medium"
-            >
-              Agregar firma
-            </button>
+          <div className="p-4 bg-gray-50 rounded-lg border border-gray-300 text-center">
+            <p className="text-sm text-gray-600">
+              Las firmas se completan al final del formulario
+            </p>
           </div>
         );
       
@@ -157,24 +286,34 @@ const ConsentForm: React.FC = () => {
     }
   };
 
-  const handleSignature = (fieldId: string) => {
-    // En una implementación real, aquí se integraría una librería de firma digital
-    const signature = prompt('Ingresa tu nombre para la firma digital:');
-    if (signature) {
-      setValue(`signatures.${fieldId}`, signature);
-    }
+  const handleSignatureSave = (role: string, signatureData: string) => {
+    setSignatures(prev => ({
+      ...prev,
+      [`${role}_signature`]: signatureData
+    }));
+  };
+
+  const handlePhotoCapture = (photoData: string | null) => {
+    setPatientPhoto(photoData);
   };
 
   const onSubmit = async (data: FormData) => {
     if (!template) return;
+    
+    // Combinar las firmas del formulario con las del canvas
+    const allSignatures = {
+      ...data.signatures,
+      ...signatures
+    };
     
     try {
       setSubmitting(true);
       await consentFormsAPI.create({
         template_id: template.id!,
         patient_data: data.patient_data,
+        patient_photo: patientPhoto,
         consent_responses: data.consent_responses,
-        signatures: data.signatures
+        signatures: allSignatures
       });
       
       alert('Consentimiento guardado exitosamente');
@@ -211,44 +350,57 @@ const ConsentForm: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="flex items-center mb-6">
-        <button
-          onClick={() => navigate('/forms')}
-          className="mr-4 p-2 hover:bg-gray-100 rounded-lg transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <div>
-          <h1 className="text-2xl font-bold text-hospital-darkBlue">
-            {template.title}
-          </h1>
-          <p className="text-gray-600">
-            Consentimiento Informado - {template.hospital_info.name}
-          </p>
+      <div className="mb-6">
+        <div className="flex items-center">
+          <button
+            onClick={() => navigate('/forms')}
+            className="mr-4 p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl font-bold text-hospital-darkBlue truncate">
+              {template.title}
+            </h1>
+            <p className="text-sm sm:text-base text-gray-600 truncate">
+              Consentimiento Informado - {template.hospital_info.name}
+            </p>
+          </div>
         </div>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
         {/* Header del Hospital */}
         <div className="card bg-gradient-to-r from-hospital-blue to-hospital-darkBlue text-white">
-          <div className="flex items-center mb-4">
-            <Shield className="w-8 h-8 mr-3" />
-            <div>
-              <h2 className="text-xl font-bold">{template.hospital_info.name}</h2>
-              <p className="text-blue-100">NIT: {template.hospital_info.nit}</p>
+          <div className="flex flex-col sm:flex-row sm:items-center mb-4">
+            <div className="flex items-center mb-3 sm:mb-0">
+              <Shield className="w-6 h-6 sm:w-8 sm:h-8 mr-3 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <h2 className="text-lg sm:text-xl font-bold truncate">{template.hospital_info.name}</h2>
+                <p className="text-blue-100 text-sm sm:text-base">NIT: {template.hospital_info.nit}</p>
+              </div>
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
             <div className="flex items-center">
-              <FileText className="w-4 h-4 mr-2" />
+              <FileText className="w-4 h-4 mr-2 flex-shrink-0" />
               <span>Código: {template.document_metadata.code}</span>
             </div>
             <div className="flex items-center">
-              <Calendar className="w-4 h-4 mr-2" />
+              <Calendar className="w-4 h-4 mr-2 flex-shrink-0" />
               <span>Versión: {template.document_metadata.version}</span>
             </div>
           </div>
+        </div>
+
+        {/* Foto del Paciente */}
+        <div className="card">
+          <PhotoCapture 
+            onCapture={handlePhotoCapture}
+            existingPhoto={patientPhoto || undefined}
+            label="Foto del Paciente"
+          />
         </div>
 
         {/* Datos del Paciente */}
@@ -257,6 +409,24 @@ const ConsentForm: React.FC = () => {
             <User className="w-5 h-5 mr-2" />
             DATOS DEL PACIENTE
           </h2>
+          
+          {/* Mensaje informativo */}
+          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              <strong>💡 Búsqueda Automática:</strong> Ingrese el número de identificación del paciente 
+              y los demás datos se cargarán automáticamente desde el sistema.
+            </p>
+          </div>
+
+          {/* Mensaje de éxito cuando se encuentra el paciente */}
+          {patientFound && (
+            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
+              <CheckCircle className="w-5 h-5 text-green-600" />
+              <p className="text-sm text-green-800">
+                <strong>✅ Paciente encontrado:</strong> Los datos han sido cargados automáticamente.
+              </p>
+            </div>
+          )}
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {template.patient_fields
@@ -444,62 +614,66 @@ const ConsentForm: React.FC = () => {
           </h2>
           
           <div className="space-y-6">
-            {template.signature_blocks.map((block, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-4">
-                <h3 className="font-medium text-gray-900 mb-4">{block.label}</h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="label">NOMBRE Y APELLIDO</label>
-                    <input
-                      {...register(`signatures.${block.role}_name`, { 
-                        required: `${block.label} - Nombre es requerido` 
-                      })}
-                      className="input-field"
-                      placeholder="Nombre completo"
-                    />
-                    {errors.signatures?.[`${block.role}_name`] && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {String(errors.signatures[`${block.role}_name`]?.message || '')}
-                      </p>
+            {template.signature_blocks.map((block, index) => {
+              const isOptional = block.role === 'acompanante';
+              return (
+                <div key={index} className="border border-gray-200 rounded-lg p-4">
+                  <h3 className="font-medium text-gray-900 mb-4">
+                    {block.label}
+                    {isOptional && (
+                      <span className="ml-2 text-sm text-gray-500 font-normal">(Opcional)</span>
                     )}
-                  </div>
-                  <div>
-                    <label className="label">DOCUMENTO DE IDENTIDAD</label>
-                    <input
-                      {...register(`signatures.${block.role}_document`, { 
-                        required: `${block.label} - Documento es requerido` 
-                      })}
-                      className="input-field"
-                      placeholder="Número de documento"
-                    />
-                    {errors.signatures?.[`${block.role}_document`] && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {String(errors.signatures[`${block.role}_document`]?.message || '')}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="label">FIRMA DIGITAL</label>
-                  <button
-                    type="button"
-                    onClick={() => handleSignature(`${block.role}_signature`)}
-                    className="w-full border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-hospital-blue transition-colors"
-                  >
-                    <div className="text-gray-500 mb-2">
-                      <svg className="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                      </svg>
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="label">
+                        NOMBRE Y APELLIDO
+                        {!isOptional && <span className="text-red-500 ml-1">*</span>}
+                      </label>
+                      <input
+                        {...register(`signatures.${block.role}_name`, { 
+                          required: isOptional ? false : `${block.label} - Nombre es requerido` 
+                        })}
+                        className="input-field"
+                        placeholder="Nombre completo"
+                      />
+                      {errors.signatures?.[`${block.role}_name`] && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {String(errors.signatures[`${block.role}_name`]?.message || '')}
+                        </p>
+                      )}
                     </div>
-                    <p className="text-sm text-gray-500">
-                      {watch(`signatures.${block.role}_signature`) || 'Haz clic para agregar firma'}
-                    </p>
-                  </button>
+                    <div>
+                      <label className="label">
+                        DOCUMENTO DE IDENTIDAD
+                        {!isOptional && <span className="text-red-500 ml-1">*</span>}
+                      </label>
+                      <input
+                        {...register(`signatures.${block.role}_document`, { 
+                          required: isOptional ? false : `${block.label} - Documento es requerido` 
+                        })}
+                        className="input-field"
+                        placeholder="Número de documento"
+                      />
+                      {errors.signatures?.[`${block.role}_document`] && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {String(errors.signatures[`${block.role}_document`]?.message || '')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <SignaturePad
+                      label={isOptional ? "FIRMA DIGITAL (Opcional)" : "FIRMA DIGITAL"}
+                      onSave={(signatureData) => handleSignatureSave(block.role, signatureData)}
+                      existingSignature={signatures[`${block.role}_signature`]}
+                    />
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

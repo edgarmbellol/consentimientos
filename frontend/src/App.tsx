@@ -9,6 +9,7 @@ import FormList from './pages/FormList';
 import ConsentForm from './pages/ConsentForm';
 import ConsentFormList from './pages/ConsentFormList';
 import FormDetails from './pages/FormDetails';
+import AuditLogs from './pages/AuditLogs';
 
 // Componente para rutas protegidas
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -27,6 +28,32 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  return <Layout>{children}</Layout>;
+};
+
+// Componente para rutas de solo admin
+const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, isLoading, isAdmin } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!isAdmin()) {
+    return <Navigate to="/admin/templates" replace />;
   }
 
   return <Layout>{children}</Layout>;
@@ -131,6 +158,15 @@ const App: React.FC = () => {
                 <ProtectedRoute>
                   <ConsentForm />
                 </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/admin/audit-logs" 
+              element={
+                <AdminRoute>
+                  <AuditLogs />
+                </AdminRoute>
               } 
             />
 

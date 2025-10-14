@@ -1,0 +1,18 @@
+{
+  "short_name": "Consentimientos",
+  "name": "Sistema de Consentimientos Informados - Hospital Divino Salvador de Sopó",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#4A90E2",
+  "background_color": "#ffffff",
+  "description": "Sistema digital para la gestión de consentimientos informados del Hospital Divino Salvador de Sopó"
+}
+
