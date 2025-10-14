@@ -1,0 +1,394 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { consentFormsAPI, templatesAPI } from '../services/api';
+import { ConsentFormResponse, ConsentTemplate } from '../types';
+import { 
+  ArrowLeft, 
+  Download,
+  Printer,
+  Calendar,
+  User,
+  FileText,
+  Shield,
+  CheckCircle,
+  AlertCircle,
+  XCircle
+} from 'lucide-react';
+
+const FormDetails: React.FC = () => {
+  const { formId } = useParams<{ formId: string }>();
+  const navigate = useNavigate();
+  const [form, setForm] = useState<ConsentFormResponse | null>(null);
+  const [template, setTemplate] = useState<ConsentTemplate | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (formId) {
+      loadFormDetails();
+    }
+  }, [formId]);
+
+  const loadFormDetails = async () => {
+    try {
+      setLoading(true);
+      const formData = await consentFormsAPI.getById(formId!);
+      setForm(formData);
+      
+      const templateData = await templatesAPI.getById(formData.template_id);
+      setTemplate(templateData);
+      
+      setError('');
+    } catch (err) {
+      setError('Error al cargar los detalles del formulario');
+      console.error('Error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('es-CO', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleDownload = () => {
+    // En una implementación real, aquí se generaría un PDF
+    alert('Funcionalidad de descarga en desarrollo');
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-hospital-blue mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando detalles...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !form || !template) {
+    return (
+      <div className="card">
+        <div className="flex items-center text-red-600">
+          <AlertCircle className="w-5 h-5 mr-2" />
+          {error || 'Formulario no encontrado'}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center">
+          <button
+            onClick={() => navigate('/admin/forms')}
+            className="mr-4 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-hospital-darkBlue">
+              {form.template_title}
+            </h1>
+            <p className="text-gray-600">
+              Consentimiento Informado - {formatDate(form.filled_at)}
+            </p>
+          </div>
+        </div>
+        
+        <div className="flex space-x-2">
+          <button
+            onClick={handlePrint}
+            className="btn-secondary flex items-center"
+          >
+            <Printer className="w-4 h-4 mr-2" />
+            Imprimir
+          </button>
+          <button
+            onClick={handleDownload}
+            className="btn-primary flex items-center"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Descargar PDF
+          </button>
+        </div>
+      </div>
+
+      {/* Header del Hospital */}
+      <div className="card bg-gradient-to-r from-hospital-blue to-hospital-darkBlue text-white print:bg-hospital-blue">
+        <div className="flex items-center mb-4">
+          <Shield className="w-8 h-8 mr-3" />
+          <div>
+            <h2 className="text-xl font-bold">{template.hospital_info.name}</h2>
+            <p className="text-blue-100">NIT: {template.hospital_info.nit}</p>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div className="flex items-center">
+            <FileText className="w-4 h-4 mr-2" />
+            <span>Código: {template.document_metadata.code}</span>
+          </div>
+          <div className="flex items-center">
+            <Calendar className="w-4 h-4 mr-2" />
+            <span>Versión: {template.document_metadata.version}</span>
+          </div>
+          <div className="flex items-center">
+            <span>Fecha: {formatDate(form.filled_at)}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Datos del Paciente */}
+      <div className="card">
+        <h2 className="text-xl font-semibold text-hospital-darkBlue mb-4 flex items-center">
+          <User className="w-5 h-5 mr-2" />
+          DATOS DEL PACIENTE
+        </h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {template.patient_fields
+            .sort((a, b) => a.order - b.order)
+            .map((field) => {
+              const value = form.patient_data[field.id];
+              return (
+                <div key={field.id}>
+                  <label className="label text-gray-700">
+                    {field.label}
+                  </label>
+                  <div className="p-3 bg-gray-50 rounded-lg border">
+                    <span className="text-gray-900">
+                      {value || 'No especificado'}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+        </div>
+      </div>
+
+      {/* Estado del Consentimiento */}
+      <div className="card">
+        <h2 className="text-xl font-semibold text-hospital-darkBlue mb-4">
+          ESTADO DEL CONSENTIMIENTO
+        </h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="flex items-center p-4 rounded-lg bg-gray-50">
+            <div className="flex-shrink-0 mr-4">
+              {form.consent_responses.consent === 'si' ? (
+                <CheckCircle className="w-8 h-8 text-green-500" />
+              ) : (
+                <XCircle className="w-8 h-8 text-red-500" />
+              )}
+            </div>
+            <div>
+              <h3 className="font-medium text-gray-900">Consentimiento</h3>
+              <p className={`text-sm font-medium ${
+                form.consent_responses.consent === 'si' ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {form.consent_responses.consent === 'si' ? 'APROBADO' : 'RECHAZADO'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center p-4 rounded-lg bg-gray-50">
+            <div className="flex-shrink-0 mr-4">
+              {form.consent_responses.digital_authorization === 'si' ? (
+                <CheckCircle className="w-8 h-8 text-green-500" />
+              ) : (
+                <AlertCircle className="w-8 h-8 text-gray-400" />
+              )}
+            </div>
+            <div>
+              <h3 className="font-medium text-gray-900">Autorización Digital</h3>
+              <p className={`text-sm font-medium ${
+                form.consent_responses.digital_authorization === 'si' ? 'text-green-600' : 'text-gray-600'
+              }`}>
+                {form.consent_responses.digital_authorization === 'si' ? 'AUTORIZADO' : 'NO AUTORIZADO'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Descripción del Procedimiento */}
+      <div className="card">
+        <h2 className="text-xl font-semibold text-hospital-darkBlue mb-4">
+          DESCRIPCIÓN DEL PROCEDIMIENTO
+        </h2>
+        <div className="prose max-w-none">
+          <p className="text-gray-700 leading-relaxed">
+            {template.procedure_description}
+          </p>
+        </div>
+      </div>
+
+      {/* Beneficios, Riesgos y Alternativas */}
+      <div className="card">
+        <h2 className="text-xl font-semibold text-hospital-darkBlue mb-4">
+          BENEFICIOS, RIESGOS Y ALTERNATIVAS
+        </h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <h3 className="font-medium text-hospital-green mb-2">Beneficios</h3>
+            <ul className="space-y-1">
+              {template.benefits_risks_alternatives.benefits.map((benefit, index) => (
+                <li key={index} className="text-sm text-gray-700 flex items-start">
+                  <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                  {benefit}
+                </li>
+              ))}
+            </ul>
+          </div>
+          
+          <div>
+            <h3 className="font-medium text-red-600 mb-2">Riesgos</h3>
+            <ul className="space-y-1">
+              {template.benefits_risks_alternatives.risks.map((risk, index) => (
+                <li key={index} className="text-sm text-gray-700 flex items-start">
+                  <AlertCircle className="w-4 h-4 text-red-500 mr-2 mt-0.5 flex-shrink-0" />
+                  {risk}
+                </li>
+              ))}
+            </ul>
+          </div>
+          
+          <div>
+            <h3 className="font-medium text-hospital-blue mb-2">Alternativas</h3>
+            <ul className="space-y-1">
+              {template.benefits_risks_alternatives.alternatives.map((alternative, index) => (
+                <li key={index} className="text-sm text-gray-700 flex items-start">
+                  <span className="w-4 h-4 bg-hospital-blue text-white rounded-full flex items-center justify-center text-xs mr-2 mt-0.5 flex-shrink-0">
+                    {index + 1}
+                  </span>
+                  {alternative}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* Implicaciones */}
+      <div className="card">
+        <h2 className="text-xl font-semibold text-hospital-darkBlue mb-4">
+          IMPLICACIONES
+        </h2>
+        <div className="prose max-w-none">
+          <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+            {template.implications}
+          </p>
+        </div>
+      </div>
+
+      {/* Recomendaciones */}
+      <div className="card">
+        <h2 className="text-xl font-semibold text-hospital-darkBlue mb-4">
+          RECOMENDACIONES
+        </h2>
+        <div className="prose max-w-none">
+          <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+            {template.recommendations}
+          </p>
+        </div>
+      </div>
+
+      {/* Firmas */}
+      <div className="card">
+        <h2 className="text-xl font-semibold text-hospital-darkBlue mb-4">
+          FIRMAS DEL CONSENTIMIENTO INFORMADO
+        </h2>
+        
+        <div className="space-y-6">
+          {template.signature_blocks.map((block, index) => (
+            <div key={index} className="border border-gray-200 rounded-lg p-4">
+              <h3 className="font-medium text-gray-900 mb-4">{block.label}</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="label text-gray-700">NOMBRE Y APELLIDO</label>
+                  <div className="p-3 bg-gray-50 rounded-lg border">
+                    <span className="text-gray-900">
+                      {form.signatures[`${block.role}_name`] || 'No especificado'}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <label className="label text-gray-700">DOCUMENTO DE IDENTIDAD</label>
+                  <div className="p-3 bg-gray-50 rounded-lg border">
+                    <span className="text-gray-900">
+                      {form.signatures[`${block.role}_document`] || 'No especificado'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <label className="label text-gray-700">FIRMA DIGITAL</label>
+                <div className="p-4 bg-gray-50 rounded-lg border border-dashed">
+                  <span className="text-gray-900">
+                    {form.signatures[`${block.role}_signature`] || 'Firma no disponible'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Revocación */}
+      <div className="card">
+        <h2 className="text-xl font-semibold text-hospital-darkBlue mb-4">
+          REVOCATORIA DEL CONSENTIMIENTO
+        </h2>
+        <div className="prose max-w-none">
+          <p className="text-gray-700 leading-relaxed">
+            {template.revocation_statement}
+          </p>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="card bg-gray-50 text-center">
+        <div className="text-sm text-gray-600">
+          <p className="mb-2">
+            <strong>Dirección:</strong> {template.hospital_info.address}
+          </p>
+          <p className="mb-2">
+            <strong>Teléfono:</strong> {template.hospital_info.phone} | 
+            <strong> Email:</strong> {template.hospital_info.email}
+          </p>
+          <p>
+            <strong>Sitio Web:</strong> {template.hospital_info.website}
+          </p>
+        </div>
+        
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <p className="text-xs text-gray-500">
+            Este documento cumple con la Ley 1581 de 2012, Decreto 1377, Decreto 1074 de 2015 
+            y demás normativas vigentes sobre protección de datos personales.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default FormDetails;
+
+

@@ -1,0 +1,63 @@
+---
+description: Se utilizan cuando se desarrolla el backend de la aplicacion
+alwaysApply: false
+---
+Eres experto en Python, FastAPI y desarrollo de API escalables.
+
+Principios clave
+- Redacta respuestas concisas y técnicas con ejemplos precisos de Python.
+- Utiliza programación funcional y declarativa; evita las clases siempre que sea posible.
+- Prioriza la iteración y la modularización en lugar de la duplicación de código.
+- Utiliza nombres de variables descriptivos con verbos auxiliares (p. ej., is_active, has_permission).
+- Usa minúsculas con guiones bajos para directorios y archivos (p. ej., routers/user_routes.py).
+- Prioriza las exportaciones con nombre para rutas y funciones de utilidad.
+- Utiliza el patrón "Recibir un objeto, devolver un objeto" (RORO).
+
+Python/FastAPI
+- Utiliza def para funciones puras y async def para operaciones asíncronas.
+- Utiliza sugerencias de tipo para todas las firmas de funciones. Prefiere los modelos de Pydantic en lugar de diccionarios sin formato para la validación de entrada.
+- Estructura de archivos: enrutador exportado, subrutas, utilidades, contenido estático, tipos (modelos, esquemas). - Evite el uso de llaves innecesarias en las sentencias condicionales.
+- Para sentencias de una sola línea en condicionales, omita las llaves.
+- Use una sintaxis concisa de una sola línea para sentencias condicionales simples (p. ej., if condition: do_something()).
+
+Manejo y validación de errores
+- Priorice el manejo de errores y los casos extremos:
+- Maneje los errores y los casos extremos al inicio de las funciones.
+- Use retornos tempranos para condiciones de error y así evitar sentencias if muy anidadas.
+- Coloque la ruta correcta al final de la función para mejorar la legibilidad.
+- Evite sentencias else innecesarias; utilice el patrón if-return en su lugar.
+- Use cláusulas de protección para manejar precondiciones y estados no válidos con antelación.
+- Implemente un registro de errores adecuado y mensajes de error intuitivos.
+- Utilice tipos de error personalizados o fábricas de errores para un manejo de errores consistente.
+
+Dependencias
+- FastAPI
+- Pydantic v2
+- Bibliotecas de bases de datos asíncronas como asyncpg o aiomysql
+- SQLAlchemy 2.0 (si se utilizan funciones ORM)
+
+Directrices específicas de FastAPI
+- Utilizar componentes funcionales (funciones simples) y modelos de Pydantic para la validación de entrada y los esquemas de respuesta.
+- Utilizar definiciones de ruta declarativas con anotaciones claras de tipo de retorno.
+- Utilizar def para operaciones síncronas y async def para asincrónicas.
+- Minimizar @app.on_event("startup") y @app.on_event("shutdown"); preferir gestores de contexto de vida útil para gestionar eventos de inicio y apagado.
+- Utilizar middleware para el registro, la monitorización de errores y la optimización del rendimiento.
+- Optimizar el rendimiento mediante funciones asíncronas para tareas vinculadas a E/S, estrategias de almacenamiento en caché y carga diferida.
+- Utilizar HTTPException para errores esperados y modelarlos como respuestas HTTP específicas.
+- Utilizar middleware para la gestión de errores inesperados, el registro y la monitorización de errores. - Utilice el Modelo Base de Pydantic para lograr una validación de entrada/salida y esquemas de respuesta consistentes.
+
+Optimización del rendimiento
+- Minimice las operaciones de E/S bloqueantes; utilice operaciones asíncronas para todas las llamadas a la base de datos y solicitudes de API externas.
+- Implemente el almacenamiento en caché para datos estáticos y de acceso frecuente mediante herramientas como Redis o almacenamiento en memoria.
+- Optimice la serialización y deserialización de datos con Pydantic.
+- Utilice técnicas de carga diferida para grandes conjuntos de datos y respuestas de API sustanciales.
+
+Convenciones clave
+1. Utilice el sistema de inyección de dependencias de FastAPI para gestionar el estado y los recursos compartidos.
+2. Priorice las métricas de rendimiento de la API (tiempo de respuesta, latencia, rendimiento).
+3. Limite las operaciones bloqueantes en las rutas:
+- Favorezca los flujos asíncronos y no bloqueantes.
+- Utilice funciones asíncronas dedicadas para las operaciones de la base de datos y de la API externa.
+- Estructure las rutas y las dependencias de forma clara para optimizar la legibilidad y el mantenimiento.
+
+Consulte la documentación de FastAPI para modelos de datos, operaciones de ruta y middleware para conocer las mejores prácticas.
