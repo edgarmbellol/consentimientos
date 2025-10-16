@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { templatesAPI } from '../services/api';
 import { ConsentTemplate, TemplateField } from '../types';
@@ -14,7 +14,7 @@ import {
   Calendar,
   PenTool
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 interface TemplateFormData {
   title: string;
@@ -42,6 +42,10 @@ interface TemplateFormData {
 
 const TemplateBuilder: React.FC = () => {
   const navigate = useNavigate();
+  const { templateId } = useParams<{ templateId: string }>();
+  const [loading, setLoading] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<TemplateFormData>({
     defaultValues: {
       hospital_name: 'E.S.E. HOSPITAL DIVINO SALVADOR DE SOPO',
@@ -133,6 +137,74 @@ const TemplateBuilder: React.FC = () => {
     { role: 'acompanante', label: 'FIRMA DEL ACOMPANANTE' }
   ]);
 
+  // Cargar datos de la plantilla si estamos en modo edición
+  useEffect(() => {
+    const loadTemplate = async () => {
+      if (templateId) {
+        try {
+          setLoading(true);
+          setIsEditMode(true);
+          const template = await templatesAPI.getById(templateId);
+          
+          // Cargar información básica
+          setValue('title', template.title);
+          setValue('description', template.description);
+          
+          // Cargar información del hospital
+          setValue('hospital_name', template.hospital_info.name);
+          setValue('hospital_nit', template.hospital_info.nit);
+          setValue('hospital_address', template.hospital_info.address);
+          setValue('hospital_phone', template.hospital_info.phone);
+          setValue('hospital_email', template.hospital_info.email);
+          setValue('hospital_website', template.hospital_info.website);
+          
+          // Cargar metadatos del documento
+          setValue('document_type', template.document_metadata.type);
+          setValue('subprocess', template.document_metadata.subprocess);
+          setValue('code', template.document_metadata.code);
+          setValue('version', template.document_metadata.version);
+          setValue('revision_date', template.document_metadata.revision_date);
+          
+          // Cargar campos del paciente
+          setPatientFields(template.patient_fields);
+          
+          // Cargar descripción del procedimiento
+          setValue('procedure_description', template.procedure_description || '');
+          
+          // Cargar beneficios, riesgos y alternativas
+          if (template.benefits_risks_alternatives) {
+            setValue('benefits', template.benefits_risks_alternatives.benefits || ['']);
+            setValue('risks', template.benefits_risks_alternatives.risks || ['']);
+            setValue('alternatives', template.benefits_risks_alternatives.alternatives || ['']);
+          }
+          
+          // Cargar implicaciones y recomendaciones
+          setValue('implications', template.implications || '');
+          setValue('recommendations', template.recommendations || '');
+          
+          // Cargar declaraciones de consentimiento
+          setValue('consent_statement', template.consent_statement || '');
+          setValue('revocation_statement', template.revocation_statement || '');
+          
+          // Cargar bloques de firma
+          if (template.signature_blocks && template.signature_blocks.length > 0) {
+            setSignatureBlocks(template.signature_blocks);
+          }
+          
+          console.log('✅ Plantilla cargada para edición:', template.title);
+        } catch (error) {
+          console.error('❌ Error al cargar la plantilla:', error);
+          alert('Error al cargar los datos de la plantilla');
+          navigate('/admin/templates');
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    
+    loadTemplate();
+  }, [templateId, setValue, navigate]);
+
   const fieldTypes = [
     { value: 'text', label: 'Texto', icon: Text },
     { value: 'textarea', label: 'Área de texto', icon: Type },
@@ -184,7 +256,7 @@ const TemplateBuilder: React.FC = () => {
 
   const onSubmit = async (data: TemplateFormData) => {
     try {
-      const template: Omit<ConsentTemplate, 'id' | 'created_at' | 'updated_at'> = {
+      const template: Omit<ConsentTemplate, 'id' | 'created_at' | 'updated_at' | 'version_number' | 'is_current' | 'parent_template_id' | 'created_by'> = {
         title: data.title,
         description: data.description,
         hospital_info: {
@@ -216,13 +288,34 @@ const TemplateBuilder: React.FC = () => {
         signature_blocks: signatureBlocks
       };
 
-      await templatesAPI.create(template);
+      if (isEditMode && templateId) {
+        // Modo edición: actualizar plantilla (crea nueva versión)
+        await templatesAPI.update(templateId, template);
+        alert('✅ Plantilla actualizada exitosamente. Se ha creado una nueva versión.');
+      } else {
+        // Modo creación: crear nueva plantilla
+        await templatesAPI.create(template);
+        alert('✅ Plantilla creada exitosamente');
+      }
+      
       navigate('/admin/templates');
-    } catch (error) {
-      console.error('Error al crear plantilla:', error);
-      alert('Error al crear la plantilla');
+    } catch (error: any) {
+      console.error('Error al guardar plantilla:', error);
+      const errorMessage = error.response?.data?.detail || (isEditMode ? 'Error al actualizar la plantilla' : 'Error al crear la plantilla');
+      alert(errorMessage);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-hospital-blue mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando plantilla...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -234,7 +327,7 @@ const TemplateBuilder: React.FC = () => {
           <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
         <h1 className="text-lg sm:text-2xl font-bold text-hospital-darkBlue">
-          Crear Nueva Plantilla
+          {isEditMode ? 'Editar Plantilla' : 'Crear Nueva Plantilla'}
         </h1>
       </div>
 
@@ -647,7 +740,7 @@ const TemplateBuilder: React.FC = () => {
             className="btn-primary flex items-center justify-center w-full sm:w-auto order-1 sm:order-2"
           >
             <Save className="w-4 h-4 mr-2" />
-            Guardar Plantilla
+            {isEditMode ? 'Actualizar Plantilla' : 'Guardar Plantilla'}
           </button>
         </div>
       </form>

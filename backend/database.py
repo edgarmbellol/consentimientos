@@ -36,6 +36,12 @@ class ConsentTemplateDB(Base):
     consent_statement = Column(Text)  # Declaración de consentimiento
     revocation_statement = Column(Text)  # Declaración de revocación
     signature_blocks = Column(Text)  # JSON as text para signature_blocks
+    
+    # Campos de versionamiento
+    version_number = Column(Integer, default=1)
+    is_current = Column(Boolean, default=True, index=True)
+    parent_template_id = Column(String, index=True)  # ID de la plantilla original (base)
+    created_by = Column(String)  # Usuario que creó esta versión
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

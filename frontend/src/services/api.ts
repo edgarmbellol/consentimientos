@@ -27,8 +27,10 @@ export const authAPI = {
 };
 
 export const templatesAPI = {
-  getAll: async (): Promise<ConsentTemplate[]> => {
-    const response = await api.get('/api/templates');
+  getAll: async (includeAllVersions: boolean = false): Promise<ConsentTemplate[]> => {
+    const response = await api.get('/api/templates', {
+      params: { include_all_versions: includeAllVersions }
+    });
     return response.data;
   },
 
@@ -37,18 +39,28 @@ export const templatesAPI = {
     return response.data;
   },
 
-  create: async (template: Omit<ConsentTemplate, 'id' | 'created_at' | 'updated_at'>): Promise<ConsentTemplate> => {
+  create: async (template: Omit<ConsentTemplate, 'id' | 'created_at' | 'updated_at' | 'version_number' | 'is_current' | 'parent_template_id' | 'created_by'>): Promise<ConsentTemplate> => {
     const response = await api.post('/api/templates', template);
     return response.data;
   },
 
-  update: async (id: string, template: Omit<ConsentTemplate, 'id' | 'created_at' | 'updated_at'>): Promise<ConsentTemplate> => {
+  update: async (id: string, template: Omit<ConsentTemplate, 'id' | 'created_at' | 'updated_at' | 'version_number' | 'is_current' | 'parent_template_id' | 'created_by'>): Promise<ConsentTemplate> => {
     const response = await api.put(`/api/templates/${id}`, template);
     return response.data;
   },
 
   delete: async (id: string): Promise<void> => {
     await api.delete(`/api/templates/${id}`);
+  },
+
+  getVersions: async (id: string): Promise<ConsentTemplate[]> => {
+    const response = await api.get(`/api/templates/${id}/versions`);
+    return response.data;
+  },
+
+  restoreVersion: async (templateId: string, versionId: string): Promise<ConsentTemplate> => {
+    const response = await api.post(`/api/templates/${templateId}/restore/${versionId}`);
+    return response.data;
   },
 };
 

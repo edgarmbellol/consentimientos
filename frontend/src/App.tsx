@@ -5,6 +5,7 @@ import Layout from './components/Layout';
 import Login from './components/Login';
 import TemplateList from './pages/TemplateList';
 import TemplateBuilder from './pages/TemplateBuilder';
+import TemplateVersions from './pages/TemplateVersions';
 import FormList from './pages/FormList';
 import ConsentForm from './pages/ConsentForm';
 import ConsentFormList from './pages/ConsentFormList';
@@ -122,6 +123,15 @@ const App: React.FC = () => {
                 <ProtectedRoute>
                   <TemplateBuilder />
                 </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/admin/templates/:templateId/versions" 
+              element={
+                <AdminRoute>
+                  <TemplateVersions />
+                </AdminRoute>
               } 
             />
 

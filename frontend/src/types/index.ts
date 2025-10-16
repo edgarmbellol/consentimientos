@@ -42,6 +42,10 @@ export interface ConsentTemplate {
     role: string;
     label: string;
   }>;
+  version_number?: number;
+  is_current?: boolean;
+  parent_template_id?: string;
+  created_by?: string;
   created_at?: string;
   updated_at?: string;
 }

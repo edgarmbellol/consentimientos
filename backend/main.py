@@ -113,6 +113,10 @@ class ConsentTemplateResponse(BaseModel):
     consent_statement: Optional[str] = ""
     revocation_statement: Optional[str] = ""
     signature_blocks: List[Dict[str, Any]]
+    version_number: int = 1
+    is_current: bool = True
+    parent_template_id: Optional[str] = None
+    created_by: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 
@@ -139,6 +143,31 @@ class ConsentFormResponse(BaseModel):
     signatures: Dict[str, str]
     filled_at: datetime
 
+# Función auxiliar para convertir plantillas
+def template_db_to_response(db_template: ConsentTemplateDB) -> ConsentTemplateResponse:
+    """Convierte un ConsentTemplateDB a ConsentTemplateResponse"""
+    return ConsentTemplateResponse(
+        id=db_template.id,
+        title=db_template.title,
+        description=db_template.description,
+        hospital_info=text_to_json(db_template.hospital_info),
+        document_metadata=text_to_json(db_template.document_metadata),
+        patient_fields=text_to_json(db_template.patient_fields),
+        procedure_description=db_template.procedure_description or "",
+        benefits_risks_alternatives=text_to_json(db_template.benefits_risks_alternatives),
+        implications=db_template.implications or "",
+        recommendations=db_template.recommendations or "",
+        consent_statement=db_template.consent_statement or "",
+        revocation_statement=db_template.revocation_statement or "",
+        signature_blocks=text_to_json(db_template.signature_blocks),
+        version_number=db_template.version_number if hasattr(db_template, 'version_number') and db_template.version_number else 1,
+        is_current=db_template.is_current if hasattr(db_template, 'is_current') and db_template.is_current is not None else True,
+        parent_template_id=db_template.parent_template_id if hasattr(db_template, 'parent_template_id') else None,
+        created_by=db_template.created_by if hasattr(db_template, 'created_by') else None,
+        created_at=db_template.created_at,
+        updated_at=db_template.updated_at
+    )
+
 # Función de autenticación
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
@@ -149,13 +178,29 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     
     # Fallback para token estático (compatibilidad)
     if token == VALID_TOKEN:
-        return {"username": "admin", "name": "Administrador"}
+        return {"username": "admin", "name": "Administrador", "role": "admin"}
     
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Token inválido",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
+# Función para verificar si el usuario es administrador
+def is_admin(user: dict) -> bool:
+    """Verifica si el usuario es administrador (admin o embl)"""
+    username = user.get("username", "").upper()
+    return username in ["ADMIN", "EMBL"]
+
+# Función para requerir permisos de administrador
+async def require_admin(current_user: dict = Depends(get_current_user)):
+    """Dependencia que requiere que el usuario sea administrador"""
+    if not is_admin(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permisos para realizar esta acción. Solo administradores (admin o embl) pueden realizar esta operación."
+        )
+    return current_user
 
 # Endpoints de autenticación
 @app.post("/api/auth/login", response_model=LoginResponse)
@@ -198,7 +243,8 @@ async def login(
     active_tokens[token] = {
         "username": user_info["username"],
         "name": user_info.get("name", user_info["username"]),
-        "aplicacion": user_info.get("aplicacion")
+        "aplicacion": user_info.get("aplicacion"),
+        "role": user_info.get("role", "user")
     }
     
     return LoginResponse(
@@ -242,9 +288,9 @@ async def get_patient(
 async def create_template(
     template: ConsentTemplate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(require_admin)
 ):
-    """Crear nueva plantilla"""
+    """Crear nueva plantilla (solo administradores)"""
     try:
         print(f"DEBUG: Datos recibidos: {template}")
         template_id = str(uuid.uuid4())
@@ -266,7 +312,11 @@ async def create_template(
         recommendations=template.recommendations or "",
         consent_statement=template.consent_statement or "",
         revocation_statement=template.revocation_statement or "",
-        signature_blocks=json_to_text(template.signature_blocks)
+        signature_blocks=json_to_text(template.signature_blocks),
+        version_number=1,
+        is_current=True,
+        parent_template_id=None,
+        created_by=current_user["username"]
     )
     
     db.add(db_template)
@@ -286,51 +336,23 @@ async def create_template(
         }
     )
     
-    return ConsentTemplateResponse(
-        id=db_template.id,
-        title=db_template.title,
-        description=db_template.description,
-        hospital_info=text_to_json(db_template.hospital_info),
-        document_metadata=text_to_json(db_template.document_metadata),
-        patient_fields=text_to_json(db_template.patient_fields),
-        procedure_description=db_template.procedure_description or "",
-        benefits_risks_alternatives=text_to_json(db_template.benefits_risks_alternatives),
-        implications=db_template.implications or "",
-        recommendations=db_template.recommendations or "",
-        consent_statement=db_template.consent_statement or "",
-        revocation_statement=db_template.revocation_statement or "",
-        signature_blocks=text_to_json(db_template.signature_blocks),
-        created_at=db_template.created_at,
-        updated_at=db_template.updated_at
-    )
+    return template_db_to_response(db_template)
 
 @app.get("/api/templates", response_model=List[ConsentTemplateResponse])
 async def get_templates(
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
+    include_all_versions: bool = False
 ):
-    """Obtener todas las plantillas"""
-    templates = db.query(ConsentTemplateDB).all()
-    return [
-        ConsentTemplateResponse(
-            id=template.id,
-            title=template.title,
-            description=template.description,
-            hospital_info=text_to_json(template.hospital_info),
-            document_metadata=text_to_json(template.document_metadata),
-            patient_fields=text_to_json(template.patient_fields),
-            procedure_description=template.procedure_description or "",
-            benefits_risks_alternatives=text_to_json(template.benefits_risks_alternatives),
-            implications=template.implications or "",
-            recommendations=template.recommendations or "",
-            consent_statement=template.consent_statement or "",
-            revocation_statement=template.revocation_statement or "",
-            signature_blocks=text_to_json(template.signature_blocks),
-            created_at=template.created_at,
-            updated_at=template.updated_at
-        )
-        for template in templates
-    ]
+    """Obtener todas las plantillas (solo versiones actuales por defecto)"""
+    query = db.query(ConsentTemplateDB)
+    
+    # Por defecto, solo mostrar versiones actuales
+    if not include_all_versions:
+        query = query.filter(ConsentTemplateDB.is_current == True)
+    
+    templates = query.all()
+    return [template_db_to_response(template) for template in templates]
 
 @app.get("/api/templates/{template_id}", response_model=ConsentTemplateResponse)
 async def get_template(
@@ -344,80 +366,83 @@ async def get_template(
     if not template:
         raise HTTPException(status_code=404, detail="Plantilla no encontrada")
     
-    return ConsentTemplateResponse(
-        id=template.id,
-        title=template.title,
-        description=template.description,
-        hospital_info=text_to_json(template.hospital_info),
-        document_metadata=text_to_json(template.document_metadata),
-        patient_fields=text_to_json(template.patient_fields),
-        procedure_description=template.procedure_description or "",
-        benefits_risks_alternatives=text_to_json(template.benefits_risks_alternatives),
-        implications=template.implications or "",
-        recommendations=template.recommendations or "",
-        consent_statement=template.consent_statement or "",
-        revocation_statement=template.revocation_statement or "",
-        signature_blocks=text_to_json(template.signature_blocks),
-        created_at=template.created_at,
-        updated_at=template.updated_at
-    )
+    return template_db_to_response(template)
 
 @app.put("/api/templates/{template_id}", response_model=ConsentTemplateResponse)
 async def update_template(
     template_id: str,
     template: ConsentTemplate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(require_admin)
 ):
-    """Actualizar plantilla"""
+    """Actualizar plantilla (solo administradores) - Crea una nueva versión"""
     db_template = db.query(ConsentTemplateDB).filter(ConsentTemplateDB.id == template_id).first()
     
     if not db_template:
         raise HTTPException(status_code=404, detail="Plantilla no encontrada")
     
-    # Actualizar campos
-    db_template.title = template.title
-    db_template.description = template.description
-    db_template.hospital_info = json_to_text(template.hospital_info)
-    db_template.document_metadata = json_to_text(template.document_metadata)
-    db_template.patient_fields = json_to_text(template.patient_fields)
-    db_template.procedure_description = template.procedure_description or ""
-    db_template.benefits_risks_alternatives = json_to_text(template.benefits_risks_alternatives)
-    db_template.implications = template.implications or ""
-    db_template.recommendations = template.recommendations or ""
-    db_template.consent_statement = template.consent_statement or ""
-    db_template.revocation_statement = template.revocation_statement or ""
-    db_template.signature_blocks = json_to_text(template.signature_blocks)
-    db_template.updated_at = datetime.utcnow()
-    
+    # Marcar la versión actual como no actual
+    db_template.is_current = False
     db.commit()
-    db.refresh(db_template)
     
-    return ConsentTemplateResponse(
-        id=db_template.id,
-        title=db_template.title,
-        description=db_template.description,
-        hospital_info=text_to_json(db_template.hospital_info),
-        document_metadata=text_to_json(db_template.document_metadata),
-        patient_fields=text_to_json(db_template.patient_fields),
-        procedure_description=db_template.procedure_description or "",
-        benefits_risks_alternatives=text_to_json(db_template.benefits_risks_alternatives),
-        implications=db_template.implications or "",
-        recommendations=db_template.recommendations or "",
-        consent_statement=db_template.consent_statement or "",
-        revocation_statement=db_template.revocation_statement or "",
-        signature_blocks=text_to_json(db_template.signature_blocks),
-        created_at=db_template.created_at,
-        updated_at=db_template.updated_at
+    # Determinar el parent_template_id
+    parent_id = db_template.parent_template_id if db_template.parent_template_id else db_template.id
+    
+    # Calcular el nuevo número de versión
+    max_version = db.query(ConsentTemplateDB).filter(
+        (ConsentTemplateDB.parent_template_id == parent_id) | (ConsentTemplateDB.id == parent_id)
+    ).count()
+    
+    # Crear nueva versión
+    new_template_id = str(uuid.uuid4())
+    new_template = ConsentTemplateDB(
+        id=new_template_id,
+        title=template.title,
+        description=template.description,
+        hospital_info=json_to_text(template.hospital_info),
+        document_metadata=json_to_text(template.document_metadata),
+        patient_fields=json_to_text(template.patient_fields),
+        procedure_description=template.procedure_description or "",
+        benefits_risks_alternatives=json_to_text(template.benefits_risks_alternatives),
+        implications=template.implications or "",
+        recommendations=template.recommendations or "",
+        consent_statement=template.consent_statement or "",
+        revocation_statement=template.revocation_statement or "",
+        signature_blocks=json_to_text(template.signature_blocks),
+        version_number=max_version + 1,
+        is_current=True,
+        parent_template_id=parent_id,
+        created_by=current_user["username"]
     )
+    
+    db.add(new_template)
+    db.commit()
+    db.refresh(new_template)
+    
+    # Registrar en auditoría
+    log_audit(
+        db=db,
+        username=current_user["username"],
+        action="update_template",
+        resource_type="template",
+        resource_id=new_template_id,
+        details={
+            "title": template.title,
+            "previous_version": db_template.version_number,
+            "new_version": new_template.version_number,
+            "parent_template_id": parent_id
+        }
+    )
+    
+    return template_db_to_response(new_template)
 
 @app.delete("/api/templates/{template_id}")
 async def delete_template(
     template_id: str,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(require_admin)
 ):
-    """Eliminar plantilla"""
+    """Eliminar plantilla (solo administradores)"""
     template = db.query(ConsentTemplateDB).filter(ConsentTemplateDB.id == template_id).first()
     
     if not template:
@@ -426,7 +451,117 @@ async def delete_template(
     db.delete(template)
     db.commit()
     
+    # Registrar en auditoría
+    log_audit(
+        db=db,
+        username=current_user["username"],
+        action="delete_template",
+        resource_type="template",
+        resource_id=template_id,
+        details={
+            "title": template.title
+        }
+    )
+    
     return {"message": "Plantilla eliminada exitosamente"}
+
+# Endpoints de versionamiento
+@app.get("/api/templates/{template_id}/versions", response_model=List[ConsentTemplateResponse])
+async def get_template_versions(
+    template_id: str,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Obtener todas las versiones de una plantilla"""
+    # Primero obtener la plantilla para saber el parent_id
+    template = db.query(ConsentTemplateDB).filter(ConsentTemplateDB.id == template_id).first()
+    
+    if not template:
+        raise HTTPException(status_code=404, detail="Plantilla no encontrada")
+    
+    # Determinar el parent_id
+    parent_id = template.parent_template_id if template.parent_template_id else template.id
+    
+    # Obtener todas las versiones (incluyendo la original)
+    versions = db.query(ConsentTemplateDB).filter(
+        (ConsentTemplateDB.id == parent_id) | (ConsentTemplateDB.parent_template_id == parent_id)
+    ).order_by(ConsentTemplateDB.version_number.desc()).all()
+    
+    return [template_db_to_response(v) for v in versions]
+
+@app.post("/api/templates/{template_id}/restore/{version_id}", response_model=ConsentTemplateResponse)
+async def restore_template_version(
+    template_id: str,
+    version_id: str,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(require_admin)
+):
+    """Restaurar una versión anterior de una plantilla (solo administradores)"""
+    # Obtener la versión a restaurar
+    version_to_restore = db.query(ConsentTemplateDB).filter(ConsentTemplateDB.id == version_id).first()
+    
+    if not version_to_restore:
+        raise HTTPException(status_code=404, detail="Versión no encontrada")
+    
+    # Obtener la versión actual
+    current_template = db.query(ConsentTemplateDB).filter(ConsentTemplateDB.id == template_id).first()
+    
+    if not current_template:
+        raise HTTPException(status_code=404, detail="Plantilla actual no encontrada")
+    
+    # Marcar la versión actual como no actual
+    current_template.is_current = False
+    db.commit()
+    
+    # Determinar el parent_template_id
+    parent_id = current_template.parent_template_id if current_template.parent_template_id else current_template.id
+    
+    # Calcular el nuevo número de versión
+    max_version = db.query(ConsentTemplateDB).filter(
+        (ConsentTemplateDB.parent_template_id == parent_id) | (ConsentTemplateDB.id == parent_id)
+    ).count()
+    
+    # Crear nueva versión basada en la versión a restaurar
+    new_template_id = str(uuid.uuid4())
+    restored_template = ConsentTemplateDB(
+        id=new_template_id,
+        title=version_to_restore.title,
+        description=version_to_restore.description,
+        hospital_info=version_to_restore.hospital_info,
+        document_metadata=version_to_restore.document_metadata,
+        patient_fields=version_to_restore.patient_fields,
+        procedure_description=version_to_restore.procedure_description,
+        benefits_risks_alternatives=version_to_restore.benefits_risks_alternatives,
+        implications=version_to_restore.implications,
+        recommendations=version_to_restore.recommendations,
+        consent_statement=version_to_restore.consent_statement,
+        revocation_statement=version_to_restore.revocation_statement,
+        signature_blocks=version_to_restore.signature_blocks,
+        version_number=max_version + 1,
+        is_current=True,
+        parent_template_id=parent_id,
+        created_by=current_user["username"]
+    )
+    
+    db.add(restored_template)
+    db.commit()
+    db.refresh(restored_template)
+    
+    # Registrar en auditoría
+    log_audit(
+        db=db,
+        username=current_user["username"],
+        action="restore_template_version",
+        resource_type="template",
+        resource_id=new_template_id,
+        details={
+            "title": version_to_restore.title,
+            "restored_from_version": version_to_restore.version_number,
+            "new_version": restored_template.version_number
+        }
+    )
+    
+    return template_db_to_response(restored_template)
 
 # Endpoints de formularios de consentimiento
 @app.post("/api/consent-forms", response_model=ConsentFormResponse)

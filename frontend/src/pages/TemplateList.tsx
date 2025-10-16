@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { templatesAPI } from '../services/api';
 import { ConsentTemplate } from '../types';
+import { useAuth } from '../contexts/AuthContext';
 import { 
   Plus, 
   Edit, 
@@ -9,10 +10,13 @@ import {
   FileText, 
   Calendar,
   User,
-  AlertCircle
+  AlertCircle,
+  History,
+  Lock
 } from 'lucide-react';
 
 const TemplateList: React.FC = () => {
+  const { canManageTemplates } = useAuth();
   const [templates, setTemplates] = useState<ConsentTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -82,16 +86,20 @@ const TemplateList: React.FC = () => {
             Plantillas de Consentimientos
           </h1>
           <p className="text-sm sm:text-base text-gray-600">
-            Administra las plantillas de consentimientos informados
+            {canManageTemplates() 
+              ? 'Administra las plantillas de consentimientos informados' 
+              : 'Visualiza las plantillas de consentimientos informados disponibles'}
           </p>
         </div>
-        <Link
-          to="/admin/templates/create"
-          className="btn-primary flex items-center justify-center w-full sm:w-auto"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Nueva Plantilla
-        </Link>
+        {canManageTemplates() && (
+          <Link
+            to="/admin/templates/create"
+            className="btn-primary flex items-center justify-center w-full sm:w-auto"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nueva Plantilla
+          </Link>
+        )}
       </div>
 
       {templates.length === 0 ? (
@@ -100,16 +108,24 @@ const TemplateList: React.FC = () => {
           <h3 className="text-lg font-medium text-gray-900 mb-2">
             No hay plantillas creadas
           </h3>
-          <p className="text-gray-500 mb-6">
-            Crea tu primera plantilla de consentimiento informado
-          </p>
-          <Link
-            to="/admin/templates/create"
-            className="btn-primary inline-flex items-center"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Crear Primera Plantilla
-          </Link>
+          {canManageTemplates() ? (
+            <>
+              <p className="text-gray-500 mb-6">
+                Crea tu primera plantilla de consentimiento informado
+              </p>
+              <Link
+                to="/admin/templates/create"
+                className="btn-primary inline-flex items-center"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Crear Primera Plantilla
+              </Link>
+            </>
+          ) : (
+            <p className="text-gray-500">
+              No hay plantillas disponibles en este momento
+            </p>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -117,29 +133,50 @@ const TemplateList: React.FC = () => {
             <div key={template.id} className="card hover:shadow-md transition-shadow">
               <div className="mb-4">
                 <div className="flex items-start justify-between mb-2">
-                  <h3 className="text-base sm:text-lg font-semibold text-hospital-darkBlue pr-2 flex-1">
-                    {template.title}
-                  </h3>
-                  <div className="flex space-x-1 flex-shrink-0">
-                    <Link
-                      to={`/admin/templates/edit/${template.id}`}
-                      className="p-1.5 sm:p-2 text-hospital-blue hover:bg-blue-50 rounded-lg transition-colors"
-                      title="Editar plantilla"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(template.id!, template.title)}
-                      className="p-1.5 sm:p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Eliminar plantilla"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                  <div className="flex-1">
+                    <h3 className="text-base sm:text-lg font-semibold text-hospital-darkBlue pr-2">
+                      {template.title}
+                    </h3>
+                    {template.version_number && template.version_number > 1 && (
+                      <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium text-blue-700 bg-blue-100 rounded-full">
+                        v{template.version_number}
+                      </span>
+                    )}
                   </div>
+                  {canManageTemplates() && (
+                    <div className="flex space-x-1 flex-shrink-0">
+                      <Link
+                        to={`/admin/templates/${template.id}/versions`}
+                        className="p-1.5 sm:p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                        title="Ver versiones"
+                      >
+                        <History className="w-4 h-4" />
+                      </Link>
+                      <Link
+                        to={`/admin/templates/edit/${template.id}`}
+                        className="p-1.5 sm:p-2 text-hospital-blue hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Editar plantilla"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Link>
+                      <button
+                        onClick={() => handleDelete(template.id!, template.title)}
+                        className="p-1.5 sm:p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Eliminar plantilla"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <p className="text-xs sm:text-sm text-gray-600 mb-3">
                   {template.description || 'Sin descripción'}
                 </p>
+                {template.created_by && (
+                  <p className="text-xs text-gray-500">
+                    Creado por: <span className="font-medium">{template.created_by}</span>
+                  </p>
+                )}
               </div>
 
               <div className="space-y-1.5 sm:space-y-2 mb-4">
