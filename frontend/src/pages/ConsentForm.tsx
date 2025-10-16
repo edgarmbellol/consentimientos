@@ -146,7 +146,7 @@ const ConsentForm: React.FC = () => {
       case 'text':
         if (isDocumentoField) {
           return (
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 {...register(fieldName, { 
                   required: field.required ? `${field.label} es requerido` : false 
@@ -155,31 +155,33 @@ const ConsentForm: React.FC = () => {
                 placeholder={field.placeholder}
                 onBlur={(e) => searchPatient(e.target.value)}
               />
-              <button
-                type="button"
-                onClick={() => {
-                  const documento = watch(fieldName);
-                  searchPatient(documento);
-                }}
-                disabled={searchingPatient}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 flex items-center gap-2 whitespace-nowrap"
-              >
-                {searchingPatient ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Buscando...
-                  </>
-                ) : (
-                  <>
-                    🔍 Buscar
-                  </>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const documento = watch(fieldName);
+                    searchPatient(documento);
+                  }}
+                  disabled={searchingPatient}
+                  className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 flex items-center gap-2 whitespace-nowrap flex-1 sm:flex-none justify-center text-sm sm:text-base"
+                >
+                  {searchingPatient ? (
+                    <>
+                      <div className="animate-spin rounded-full h-3.5 h-3.5 sm:h-4 sm:w-4 border-b-2 border-white"></div>
+                      Buscando...
+                    </>
+                  ) : (
+                    <>
+                      🔍 Buscar
+                    </>
+                  )}
+                </button>
+                {patientFound && (
+                  <div className="flex items-center text-green-600 flex-shrink-0">
+                    <CheckCircle className="w-5 h-5" />
+                  </div>
                 )}
-              </button>
-              {patientFound && (
-                <div className="flex items-center text-green-600">
-                  <CheckCircle className="w-5 h-5" />
-                </div>
-              )}
+              </div>
             </div>
           );
         }
@@ -300,6 +302,16 @@ const ConsentForm: React.FC = () => {
   const onSubmit = async (data: FormData) => {
     if (!template) return;
     
+    // Debug: mostrar qué firmas tenemos
+    console.log('Debug firmas al enviar:', {
+      formSignatures: data.signatures,
+      canvasSignatures: signatures,
+      combinedSignatures: {
+        ...data.signatures,
+        ...signatures
+      }
+    });
+    
     // Combinar las firmas del formulario con las del canvas
     const allSignatures = {
       ...data.signatures,
@@ -350,26 +362,26 @@ const ConsentForm: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="mb-6">
-        <div className="flex items-center">
+      <div className="mb-4 sm:mb-6">
+        <div className="flex items-center gap-2 sm:gap-4">
           <button
             onClick={() => navigate('/forms')}
-            className="mr-4 p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+            className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl font-bold text-hospital-darkBlue truncate">
+            <h1 className="text-lg sm:text-2xl font-bold text-hospital-darkBlue truncate">
               {template.title}
             </h1>
-            <p className="text-sm sm:text-base text-gray-600 truncate">
+            <p className="text-xs sm:text-base text-gray-600 truncate">
               Consentimiento Informado - {template.hospital_info.name}
             </p>
           </div>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-8">
         {/* Header del Hospital */}
         <div className="card bg-gradient-to-r from-hospital-blue to-hospital-darkBlue text-white">
           <div className="flex flex-col sm:flex-row sm:items-center mb-4">
@@ -690,18 +702,18 @@ const ConsentForm: React.FC = () => {
         </div>
 
         {/* Botones de Acción */}
-        <div className="flex justify-end space-x-4">
+        <div className="flex flex-col sm:flex-row sm:justify-end gap-3 sm:gap-4">
           <button
             type="button"
             onClick={() => navigate('/forms')}
-            className="btn-secondary"
+            className="btn-secondary w-full sm:w-auto order-2 sm:order-1"
           >
             Cancelar
           </button>
           <button
             type="submit"
             disabled={submitting}
-            className="btn-primary flex items-center"
+            className="btn-primary flex items-center justify-center w-full sm:w-auto order-1 sm:order-2"
           >
             <Save className="w-4 h-4 mr-2" />
             {submitting ? 'Guardando...' : 'Guardar Consentimiento'}

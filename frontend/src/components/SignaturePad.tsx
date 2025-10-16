@@ -78,6 +78,16 @@ const SignaturePad: React.FC<SignaturePadProps> = ({ onSave, existingSignature, 
     if (!context) return;
     setIsDrawing(false);
     context.closePath();
+    
+    // Auto-guardar la firma cuando se termine de dibujar
+    if (hasSignature) {
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const signatureData = canvas.toDataURL('image/png');
+        console.log('SignaturePad: Auto-guardando firma', signatureData.substring(0, 50) + '...');
+        onSave(signatureData);
+      }
+    }
   };
 
   const clearSignature = () => {
@@ -93,6 +103,7 @@ const SignaturePad: React.FC<SignaturePadProps> = ({ onSave, existingSignature, 
     if (!canvas) return;
 
     const signatureData = canvas.toDataURL('image/png');
+    console.log('SignaturePad: Guardando firma', signatureData.substring(0, 50) + '...');
     onSave(signatureData);
   };
 

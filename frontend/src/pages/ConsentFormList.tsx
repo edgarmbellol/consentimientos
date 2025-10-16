@@ -76,33 +76,33 @@ const ConsentFormList: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
+      <div className="mb-4 sm:mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-hospital-darkBlue">
+          <h1 className="text-xl sm:text-2xl font-bold text-hospital-darkBlue">
             Formularios de Consentimiento
           </h1>
-          <p className="text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600">
             Revisa los consentimientos informados completados
           </p>
         </div>
       </div>
 
       {/* Barra de búsqueda */}
-      <div className="card mb-6">
-        <div className="flex items-center space-x-4">
+      <div className="card mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
             <input
               type="text"
-              placeholder="Buscar por paciente, documento o tipo de consentimiento..."
+              placeholder="Buscar por paciente, documento..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="input-field pl-10"
+              className="input-field pl-9 sm:pl-10 text-sm sm:text-base"
             />
           </div>
-          <div className="flex items-center text-sm text-gray-500">
-            <Filter className="w-4 h-4 mr-2" />
-            {filteredForms.length} de {forms.length} formularios
+          <div className="flex items-center text-xs sm:text-sm text-gray-500 flex-shrink-0">
+            <Filter className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+            {filteredForms.length} de {forms.length}
           </div>
         </div>
       </div>
@@ -130,46 +130,46 @@ const ConsentFormList: React.FC = () => {
           )}
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {filteredForms.map((form) => (
             <div key={form.id} className="card hover:shadow-md transition-shadow">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center mb-2">
-                    <h3 className="text-lg font-semibold text-hospital-darkBlue mr-3">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <h3 className="text-base sm:text-lg font-semibold text-hospital-darkBlue">
                       {form.template_title}
                     </h3>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 flex-shrink-0">
                       Completado
                     </span>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                    <div className="flex items-center">
-                      <User className="w-4 h-4 mr-2" />
-                      <span>
-                        <strong>Paciente:</strong> {form.patient_data.nombre || form.patient_data['NOMBRE'] || 'No especificado'}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600">
+                    <div className="flex items-center min-w-0">
+                      <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                      <span className="truncate">
+                        <strong className="font-medium">Paciente:</strong> {form.patient_data.nombre || form.patient_data['NOMBRE'] || 'No especificado'}
                       </span>
                     </div>
-                    <div className="flex items-center">
-                      <FileText className="w-4 h-4 mr-2" />
-                      <span>
-                        <strong>Documento:</strong> {form.patient_data['N° DE IDENTIFICACIÓN'] || form.patient_data['NOMBRE'] || 'No especificado'}
+                    <div className="flex items-center min-w-0">
+                      <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                      <span className="truncate">
+                        <strong className="font-medium">Doc:</strong> {form.patient_data['N° DE IDENTIFICACIÓN'] || 'No especificado'}
                       </span>
                     </div>
-                    <div className="flex items-center">
-                      <Calendar className="w-4 h-4 mr-2" />
-                      <span>
-                        <strong>Fecha:</strong> {formatDate(form.filled_at)}
+                    <div className="flex items-center min-w-0">
+                      <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                      <span className="truncate">
+                        <strong className="font-medium">Fecha:</strong> {formatDate(form.filled_at)}
                       </span>
                     </div>
                   </div>
 
                   {/* Estado del consentimiento */}
-                  <div className="mt-3 flex items-center space-x-4">
+                  <div className="mt-2 sm:mt-3 flex flex-wrap items-center gap-2 sm:gap-3">
                     <div className="flex items-center">
-                      <span className="text-sm text-gray-600 mr-2">Consentimiento:</span>
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      <span className="text-xs sm:text-sm text-gray-600 mr-1.5 sm:mr-2 flex-shrink-0">Consentimiento:</span>
+                      <span className={`inline-flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium ${
                         form.consent_responses.consent === 'si' 
                           ? 'bg-green-100 text-green-800' 
                           : 'bg-red-100 text-red-800'
@@ -178,24 +178,24 @@ const ConsentFormList: React.FC = () => {
                       </span>
                     </div>
                     <div className="flex items-center">
-                      <span className="text-sm text-gray-600 mr-2">Autorización Digital:</span>
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      <span className="text-xs sm:text-sm text-gray-600 mr-1.5 sm:mr-2 flex-shrink-0">Aut. Digital:</span>
+                      <span className={`inline-flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium ${
                         form.consent_responses.digital_authorization === 'si' 
                           ? 'bg-blue-100 text-blue-800' 
                           : 'bg-gray-100 text-gray-800'
                       }`}>
-                        {form.consent_responses.digital_authorization === 'si' ? 'Autorizado' : 'No autorizado'}
+                        {form.consent_responses.digital_authorization === 'si' ? 'Sí' : 'No'}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="ml-6">
+                <div className="flex-shrink-0">
                   <Link
                     to={`/admin/forms/${form.id}`}
-                    className="btn-secondary flex items-center"
+                    className="btn-secondary flex items-center justify-center w-full sm:w-auto text-xs sm:text-sm py-2"
                   >
-                    <Eye className="w-4 h-4 mr-2" />
+                    <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                     Ver Detalles
                   </Link>
                 </div>

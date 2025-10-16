@@ -76,18 +76,18 @@ const TemplateList: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-hospital-darkBlue">
+          <h1 className="text-xl sm:text-2xl font-bold text-hospital-darkBlue">
             Plantillas de Consentimientos
           </h1>
-          <p className="text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600">
             Administra las plantillas de consentimientos informados
           </p>
         </div>
         <Link
           to="/admin/templates/create"
-          className="btn-primary flex items-center"
+          className="btn-primary flex items-center justify-center w-full sm:w-auto"
         >
           <Plus className="w-4 h-4 mr-2" />
           Nueva Plantilla
@@ -112,55 +112,55 @@ const TemplateList: React.FC = () => {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {templates.map((template) => (
             <div key={template.id} className="card hover:shadow-md transition-shadow">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-hospital-darkBlue mb-2">
+              <div className="mb-4">
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="text-base sm:text-lg font-semibold text-hospital-darkBlue pr-2 flex-1">
                     {template.title}
                   </h3>
-                  <p className="text-sm text-gray-600 mb-3">
-                    {template.description || 'Sin descripción'}
-                  </p>
+                  <div className="flex space-x-1 flex-shrink-0">
+                    <Link
+                      to={`/admin/templates/edit/${template.id}`}
+                      className="p-1.5 sm:p-2 text-hospital-blue hover:bg-blue-50 rounded-lg transition-colors"
+                      title="Editar plantilla"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Link>
+                    <button
+                      onClick={() => handleDelete(template.id!, template.title)}
+                      className="p-1.5 sm:p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Eliminar plantilla"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex space-x-1 ml-4">
-                  <Link
-                    to={`/admin/templates/edit/${template.id}`}
-                    className="p-2 text-hospital-blue hover:bg-blue-50 rounded-lg transition-colors"
-                    title="Editar plantilla"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(template.id!, template.title)}
-                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Eliminar plantilla"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+                <p className="text-xs sm:text-sm text-gray-600 mb-3">
+                  {template.description || 'Sin descripción'}
+                </p>
               </div>
 
-              <div className="space-y-2 mb-4">
-                <div className="flex items-center text-sm text-gray-500">
-                  <FileText className="w-4 h-4 mr-2" />
-                  <span>{template.document_metadata.code}</span>
+              <div className="space-y-1.5 sm:space-y-2 mb-4">
+                <div className="flex items-center text-xs sm:text-sm text-gray-500">
+                  <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
+                  <span className="truncate">{template.document_metadata.code}</span>
                 </div>
-                <div className="flex items-center text-sm text-gray-500">
-                  <User className="w-4 h-4 mr-2" />
+                <div className="flex items-center text-xs sm:text-sm text-gray-500">
+                  <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
                   <span>{template.patient_fields.length} campos</span>
                 </div>
-                <div className="flex items-center text-sm text-gray-500">
-                  <Calendar className="w-4 h-4 mr-2" />
-                  <span>Creado: {formatDate(template.created_at)}</span>
+                <div className="flex items-center text-xs sm:text-sm text-gray-500">
+                  <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
+                  <span className="truncate">Creado: {formatDate(template.created_at)}</span>
                 </div>
               </div>
 
-              <div className="flex space-x-2">
+              <div className="flex">
                 <Link
                   to={`/forms/${template.id}`}
-                  className="flex-1 btn-secondary text-center text-sm py-2"
+                  className="flex-1 btn-secondary text-center text-xs sm:text-sm py-2"
                 >
                   Usar Plantilla
                 </Link>

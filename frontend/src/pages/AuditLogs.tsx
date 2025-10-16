@@ -100,76 +100,76 @@ const AuditLogs: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-          <Activity className="w-8 h-8 text-blue-600" />
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+      <div className="mb-4 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2 sm:gap-3">
+          <Activity className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />
           Logs de Auditoría
         </h1>
-        <p className="mt-2 text-gray-600">
+        <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">
           Registro de todas las acciones realizadas en el sistema
         </p>
       </div>
 
       {/* Resumen */}
       {summary && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-8">
+          <div className="bg-white rounded-lg shadow p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total de Logs</p>
-                <p className="text-2xl font-bold text-gray-900">{summary.total_logs}</p>
+                <p className="text-xs sm:text-sm text-gray-600">Total de Logs</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900">{summary.total_logs}</p>
               </div>
-              <FileText className="w-8 h-8 text-blue-600" />
+              <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Usuarios Activos</p>
-                <p className="text-2xl font-bold text-gray-900">{summary.active_users_count}</p>
+                <p className="text-xs sm:text-sm text-gray-600">Usuarios Activos</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900">{summary.active_users_count}</p>
               </div>
-              <User className="w-8 h-8 text-green-600" />
+              <User className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 flex-shrink-0" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Plantillas Creadas</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-xs sm:text-sm text-gray-600">Plantillas</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900">
                   {summary.actions_summary['create_template'] || 0}
                 </p>
               </div>
-              <FileText className="w-8 h-8 text-purple-600" />
+              <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 flex-shrink-0" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Formularios Llenados</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-xs sm:text-sm text-gray-600">Formularios</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900">
                   {summary.actions_summary['create_form'] || 0}
                 </p>
               </div>
-              <FileText className="w-8 h-8 text-orange-600" />
+              <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-orange-600 flex-shrink-0" />
             </div>
           </div>
         </div>
       )}
 
       {/* Filtros */}
-      <div className="bg-white rounded-lg shadow p-6 mb-8">
-        <div className="flex items-center gap-2 mb-4">
-          <Filter className="w-5 h-5 text-gray-600" />
-          <h2 className="text-lg font-semibold text-gray-900">Filtros</h2>
+      <div className="bg-white rounded-lg shadow p-4 sm:p-6 mb-4 sm:mb-8">
+        <div className="flex items-center gap-2 mb-3 sm:mb-4">
+          <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900">Filtros</h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
               Usuario
             </label>
             <input
@@ -177,18 +177,18 @@ const AuditLogs: React.FC = () => {
               value={filterUsername}
               onChange={(e) => setFilterUsername(e.target.value)}
               placeholder="Filtrar por usuario..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
               Acción
             </label>
             <select
               value={filterAction}
               onChange={(e) => setFilterAction(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">Todas las acciones</option>
               <option value="login">Inicio de Sesión</option>
@@ -202,13 +202,13 @@ const AuditLogs: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
               Límite
             </label>
             <select
               value={limit}
               onChange={(e) => setLimit(Number(e.target.value))}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="25">25 registros</option>
               <option value="50">50 registros</option>
@@ -218,25 +218,25 @@ const AuditLogs: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex gap-4 mt-4">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-3 sm:mt-4">
           <button
             onClick={handleFilter}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+            className="px-4 sm:px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
           >
-            <Filter className="w-4 h-4" />
+            <Filter className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             Aplicar Filtros
           </button>
           <button
             onClick={handleClearFilters}
-            className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+            className="px-4 sm:px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm sm:text-base"
           >
             Limpiar
           </button>
           <button
             onClick={loadLogs}
-            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+            className="px-4 sm:px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             Actualizar
           </button>
         </div>
@@ -248,22 +248,22 @@ const AuditLogs: React.FC = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Fecha y Hora
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Usuario
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Acción
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
                   Recurso
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
                   Detalles
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
                   IP
                 </th>
               </tr>
@@ -278,36 +278,36 @@ const AuditLogs: React.FC = () => {
               ) : (
                 logs.map((log) => (
                   <tr key={log.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-gray-400" />
-                        {formatDate(log.timestamp)}
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-900">
+                      <div className="flex items-center gap-1 sm:gap-2">
+                        <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 hidden sm:block" />
+                        <span className="whitespace-nowrap">{formatDate(log.timestamp)}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <User className="w-4 h-4 text-gray-400" />
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4">
+                      <div className="flex items-center gap-1 sm:gap-2">
+                        <User className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 hidden sm:block" />
+                        <div className="min-w-0">
+                          <div className="text-xs sm:text-sm font-medium text-gray-900 truncate">
                             {log.username}
                           </div>
                           {log.user_name && (
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-gray-500 truncate">
                               {log.user_name}
                             </div>
                           )}
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getActionColor(log.action)}`}>
+                    <td className="px-3 sm:px-6 py-3 sm:py-4">
+                      <span className={`px-2 sm:px-3 py-0.5 sm:py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getActionColor(log.action)}`}>
                         {getActionLabel(log.action)}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-500 hidden md:table-cell">
                       {log.resource_type && (
                         <div>
-                          <div className="font-medium text-gray-700">
+                          <div className="font-medium text-gray-700 truncate">
                             {log.resource_type}
                           </div>
                           {log.resource_id && (
@@ -318,28 +318,28 @@ const AuditLogs: React.FC = () => {
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-500 hidden lg:table-cell">
                       {log.details && (
                         <div className="max-w-xs">
                           {log.details.title && (
-                            <div className="text-xs">
+                            <div className="text-xs truncate">
                               <span className="font-medium">Título:</span> {log.details.title}
                             </div>
                           )}
                           {log.details.template_title && (
-                            <div className="text-xs">
+                            <div className="text-xs truncate">
                               <span className="font-medium">Plantilla:</span> {log.details.template_title}
                             </div>
                           )}
                           {log.details.patient_name && (
-                            <div className="text-xs">
+                            <div className="text-xs truncate">
                               <span className="font-medium">Paciente:</span> {log.details.patient_name}
                             </div>
                           )}
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-500 hidden lg:table-cell">
                       {log.ip_address || 'N/A'}
                     </td>
                   </tr>
@@ -351,7 +351,7 @@ const AuditLogs: React.FC = () => {
       </div>
 
       {/* Información adicional */}
-      <div className="mt-4 text-sm text-gray-600 text-center">
+      <div className="mt-3 sm:mt-4 text-xs sm:text-sm text-gray-600 text-center">
         Mostrando {logs.length} de {summary?.total_logs || 0} registros totales
       </div>
     </div>

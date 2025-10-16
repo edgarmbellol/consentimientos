@@ -71,33 +71,33 @@ const FormList: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
+      <div className="mb-4 sm:mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-hospital-darkBlue">
+          <h1 className="text-xl sm:text-2xl font-bold text-hospital-darkBlue">
             Plantillas de Consentimiento
           </h1>
-          <p className="text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600">
             Selecciona una plantilla para completar un consentimiento informado
           </p>
         </div>
       </div>
 
       {/* Barra de búsqueda */}
-      <div className="card mb-6">
-        <div className="flex items-center space-x-4">
+      <div className="card mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
             <input
               type="text"
-              placeholder="Buscar por título, descripción o código..."
+              placeholder="Buscar por título, código..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="input-field pl-10"
+              className="input-field pl-9 sm:pl-10 text-sm sm:text-base"
             />
           </div>
-          <div className="flex items-center text-sm text-gray-500">
-            <Filter className="w-4 h-4 mr-2" />
-            {filteredTemplates.length} de {templates.length} plantillas
+          <div className="flex items-center text-xs sm:text-sm text-gray-500 flex-shrink-0">
+            <Filter className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+            {filteredTemplates.length} de {templates.length}
           </div>
         </div>
       </div>
@@ -116,48 +116,46 @@ const FormList: React.FC = () => {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {filteredTemplates.map((template) => (
-            <div key={template.id} className="card hover:shadow-lg transition-all duration-200 hover:scale-105">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-hospital-darkBlue mb-2">
-                    {template.title}
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-3">
-                    {template.description || 'Sin descripción'}
-                  </p>
-                </div>
+            <div key={template.id} className="card hover:shadow-lg transition-all duration-200 sm:hover:scale-105">
+              <div className="mb-3 sm:mb-4">
+                <h3 className="text-base sm:text-lg font-semibold text-hospital-darkBlue mb-2">
+                  {template.title}
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3">
+                  {template.description || 'Sin descripción'}
+                </p>
               </div>
 
-              <div className="space-y-2 mb-6">
-                <div className="flex items-center text-sm text-gray-500">
-                  <FileText className="w-4 h-4 mr-2" />
-                  <span>Código: {template.document_metadata.code}</span>
+              <div className="space-y-1.5 sm:space-y-2 mb-4 sm:mb-6">
+                <div className="flex items-center text-xs sm:text-sm text-gray-500">
+                  <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                  <span className="truncate">Código: {template.document_metadata.code}</span>
                 </div>
-                <div className="flex items-center text-sm text-gray-500">
-                  <User className="w-4 h-4 mr-2" />
+                <div className="flex items-center text-xs sm:text-sm text-gray-500">
+                  <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0" />
                   <span>{template.patient_fields.length} campos de paciente</span>
                 </div>
-                <div className="flex items-center text-sm text-gray-500">
-                  <Calendar className="w-4 h-4 mr-2" />
+                <div className="flex items-center text-xs sm:text-sm text-gray-500">
+                  <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0" />
                   <span>Versión {template.document_metadata.version}</span>
                 </div>
               </div>
 
               {/* Información del hospital */}
-              <div className="border-t border-gray-200 pt-4 mb-4">
+              <div className="border-t border-gray-200 pt-3 sm:pt-4 mb-3 sm:mb-4">
                 <div className="text-xs text-gray-500">
-                  <p className="font-medium text-gray-700">{template.hospital_info.name}</p>
-                  <p>NIT: {template.hospital_info.nit}</p>
+                  <p className="font-medium text-gray-700 truncate">{template.hospital_info.name}</p>
+                  <p className="truncate">NIT: {template.hospital_info.nit}</p>
                 </div>
               </div>
 
               {/* Botón de acción */}
-              <div className="flex space-x-2">
+              <div className="flex">
                 <Link
                   to={`/forms/${template.id}`}
-                  className="flex-1 btn-primary flex items-center justify-center"
+                  className="flex-1 btn-primary flex items-center justify-center text-sm py-2.5"
                 >
                   <Play className="w-4 h-4 mr-2" />
                   Completar

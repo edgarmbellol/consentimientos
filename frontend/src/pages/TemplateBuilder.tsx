@@ -226,25 +226,25 @@ const TemplateBuilder: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="flex items-center mb-6">
+      <div className="flex items-center mb-4 sm:mb-6 gap-2 sm:gap-4">
         <button
           onClick={() => navigate('/admin/templates')}
-          className="mr-4 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
-        <h1 className="text-2xl font-bold text-hospital-darkBlue">
+        <h1 className="text-lg sm:text-2xl font-bold text-hospital-darkBlue">
           Crear Nueva Plantilla
         </h1>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-8">
         {/* Información General */}
         <div className="card">
-          <h2 className="text-xl font-semibold text-hospital-darkBlue mb-4">
+          <h2 className="text-base sm:text-xl font-semibold text-hospital-darkBlue mb-3 sm:mb-4">
             Información General
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <label className="label">Título del Consentimiento</label>
               <input
@@ -269,10 +269,10 @@ const TemplateBuilder: React.FC = () => {
 
         {/* Información del Hospital */}
         <div className="card">
-          <h2 className="text-xl font-semibold text-hospital-darkBlue mb-4">
+          <h2 className="text-base sm:text-xl font-semibold text-hospital-darkBlue mb-3 sm:mb-4">
             Información del Hospital
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <label className="label">Nombre del Hospital</label>
               <input
@@ -321,7 +321,7 @@ const TemplateBuilder: React.FC = () => {
 
         {/* Metadatos del Documento */}
         <div className="card">
-          <h2 className="text-xl font-semibold text-hospital-darkBlue mb-4">
+          <h2 className="text-base sm:text-xl font-semibold text-hospital-darkBlue mb-3 sm:mb-4">
             Metadatos del Documento
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -444,7 +444,7 @@ const TemplateBuilder: React.FC = () => {
 
         {/* Descripción del Procedimiento */}
         <div className="card">
-          <h2 className="text-xl font-semibold text-hospital-darkBlue mb-4">
+          <h2 className="text-base sm:text-xl font-semibold text-hospital-darkBlue mb-3 sm:mb-4">
             Descripción del Procedimiento
           </h2>
           <textarea
@@ -460,7 +460,7 @@ const TemplateBuilder: React.FC = () => {
 
         {/* Beneficios, Riesgos y Alternativas */}
         <div className="card">
-          <h2 className="text-xl font-semibold text-hospital-darkBlue mb-4">
+          <h2 className="text-base sm:text-xl font-semibold text-hospital-darkBlue mb-3 sm:mb-4">
             Beneficios, Riesgos y Alternativas
           </h2>
           
@@ -571,7 +571,7 @@ const TemplateBuilder: React.FC = () => {
 
         {/* Implicaciones */}
         <div className="card">
-          <h2 className="text-xl font-semibold text-hospital-darkBlue mb-4">
+          <h2 className="text-base sm:text-xl font-semibold text-hospital-darkBlue mb-3 sm:mb-4">
             Implicaciones
           </h2>
           <textarea
@@ -587,7 +587,7 @@ const TemplateBuilder: React.FC = () => {
 
         {/* Recomendaciones */}
         <div className="card">
-          <h2 className="text-xl font-semibold text-hospital-darkBlue mb-4">
+          <h2 className="text-base sm:text-xl font-semibold text-hospital-darkBlue mb-3 sm:mb-4">
             Recomendaciones
           </h2>
           <textarea
@@ -603,7 +603,7 @@ const TemplateBuilder: React.FC = () => {
 
         {/* Declaración de Consentimiento */}
         <div className="card">
-          <h2 className="text-xl font-semibold text-hospital-darkBlue mb-4">
+          <h2 className="text-base sm:text-xl font-semibold text-hospital-darkBlue mb-3 sm:mb-4">
             Declaración de Consentimiento
           </h2>
           <textarea
@@ -619,7 +619,7 @@ const TemplateBuilder: React.FC = () => {
 
         {/* Declaración de Revocación */}
         <div className="card">
-          <h2 className="text-xl font-semibold text-hospital-darkBlue mb-4">
+          <h2 className="text-base sm:text-xl font-semibold text-hospital-darkBlue mb-3 sm:mb-4">
             Declaración de Revocación
           </h2>
           <textarea
@@ -634,17 +634,17 @@ const TemplateBuilder: React.FC = () => {
         </div>
 
         {/* Botones de Acción */}
-        <div className="flex justify-end space-x-4">
+        <div className="flex flex-col sm:flex-row sm:justify-end gap-3 sm:gap-4">
           <button
             type="button"
             onClick={() => navigate('/admin/templates')}
-            className="btn-secondary"
+            className="btn-secondary w-full sm:w-auto order-2 sm:order-1"
           >
             Cancelar
           </button>
           <button
             type="submit"
-            className="btn-primary flex items-center"
+            className="btn-primary flex items-center justify-center w-full sm:w-auto order-1 sm:order-2"
           >
             <Save className="w-4 h-4 mr-2" />
             Guardar Plantilla

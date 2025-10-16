@@ -384,21 +384,55 @@ const FormDetails: React.FC = () => {
               
               <div>
                 <label className="label text-gray-700">FIRMA DIGITAL</label>
-                {form.signatures[`${block.role}_signature`] ? (
-                  <div className="p-4 bg-gray-50 rounded-lg border">
-                    <img 
-                      src={form.signatures[`${block.role}_signature`]} 
-                      alt={`Firma de ${block.label}`}
-                      className="signature-print max-h-32 mx-auto"
-                    />
-                  </div>
-                ) : (
-                  <div className="p-4 bg-gray-50 rounded-lg border border-dashed">
-                    <span className="text-gray-500">
-                      {isOptional ? 'Sin firma (opcional)' : 'Firma no disponible'}
-                    </span>
-                  </div>
-                )}
+                {(() => {
+                  const signatureKey = `${block.role}_signature`;
+                  const signatureData = form.signatures[signatureKey];
+                  
+                  // Debug: mostrar información de la firma
+                  console.log('Signature debug:', {
+                    role: block.role,
+                    signatureKey,
+                    signatureData: signatureData ? 'Presente' : 'Ausente',
+                    signatureLength: signatureData ? signatureData.length : 0,
+                    allSignatures: Object.keys(form.signatures),
+                    formSignatures: form.signatures
+                  });
+                  
+                  if (signatureData && signatureData.trim() !== '' && signatureData !== 'null' && signatureData !== 'undefined') {
+                    return (
+                      <div className="p-4 bg-gray-50 rounded-lg border">
+                        <img 
+                          src={signatureData} 
+                          alt={`Firma de ${block.label}`}
+                          className="signature-print max-h-32 mx-auto"
+                          onError={(e) => {
+                            console.error('Error cargando imagen de firma:', e);
+                            const target = e.currentTarget as HTMLImageElement;
+                            target.style.display = 'none';
+                            const nextElement = target.nextElementSibling as HTMLElement;
+                            if (nextElement) {
+                              nextElement.style.display = 'block';
+                            }
+                          }}
+                        />
+                        <div style={{display: 'none'}} className="text-red-500 text-sm">
+                          Error cargando la imagen de firma
+                        </div>
+                      </div>
+                    );
+                  } else {
+                    return (
+                      <div className="p-4 bg-gray-50 rounded-lg border border-dashed">
+                        <span className="text-gray-500">
+                          {isOptional ? 'Sin firma (opcional)' : 'Firma no disponible'}
+                        </span>
+                        <div className="text-xs text-gray-400 mt-2">
+                          Debug: Clave: {signatureKey} | Valor: {signatureData || 'undefined'}
+                        </div>
+                      </div>
+                    );
+                  }
+                })()}
               </div>
               </div>
             );

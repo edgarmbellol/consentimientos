@@ -39,6 +39,10 @@ app.add_middleware(
 security = HTTPBearer()
 VALID_TOKEN = "admin_token_123"
 
+# Almacenamiento de tokens en memoria (para desarrollo)
+# En producción, usar JWT o Redis
+active_tokens = {}  # {token: {"username": str, "name": str}}
+
 # Funciones auxiliares para manejar JSON
 def json_to_text(data):
     """Convierte datos a JSON string"""
@@ -137,13 +141,21 @@ class ConsentFormResponse(BaseModel):
 
 # Función de autenticación
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    if credentials.credentials != VALID_TOKEN:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token inválido",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    return {"username": "admin"}
+    token = credentials.credentials
+    
+    # Verificar si el token existe en active_tokens
+    if token in active_tokens:
+        return active_tokens[token]
+    
+    # Fallback para token estático (compatibilidad)
+    if token == VALID_TOKEN:
+        return {"username": "admin", "name": "Administrador"}
+    
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Token inválido",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
 
 # Endpoints de autenticación
 @app.post("/api/auth/login", response_model=LoginResponse)
@@ -179,9 +191,18 @@ async def login(
         user_agent=user_agent
     )
 
-    # En una implementación real, generarías un JWT token
+    # Generar token único para este usuario
+    token = f"token_{uuid.uuid4().hex}"
+    
+    # Almacenar token con información del usuario
+    active_tokens[token] = {
+        "username": user_info["username"],
+        "name": user_info.get("name", user_info["username"]),
+        "aplicacion": user_info.get("aplicacion")
+    }
+    
     return LoginResponse(
-        token=VALID_TOKEN,
+        token=token,
         message="Login exitoso",
         user=user_info
     )
@@ -547,9 +568,10 @@ async def get_audit_logs(
     username: Optional[str] = None,
     action: Optional[str] = None
 ):
-    """Obtener logs de auditoría - Solo para admin (EMBL)"""
-    # Verificar que el usuario sea EMBL
-    if current_user["username"].upper() != "EMBL":
+    """Obtener logs de auditoría - Requiere autenticación"""
+    # Verificar que el usuario tenga permisos (EMBL o admin)
+    allowed_users = ["EMBL", "ADMIN", "admin"]
+    if current_user["username"].upper() not in [u.upper() for u in allowed_users]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="No tienes permisos para acceder a esta información"
@@ -589,9 +611,10 @@ async def get_audit_summary(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
-    """Obtener resumen de actividad - Solo para admin (EMBL)"""
-    # Verificar que el usuario sea EMBL
-    if current_user["username"].upper() != "EMBL":
+    """Obtener resumen de actividad - Requiere autenticación"""
+    # Verificar que el usuario tenga permisos (EMBL o admin)
+    allowed_users = ["EMBL", "ADMIN", "admin"]
+    if current_user["username"].upper() not in [u.upper() for u in allowed_users]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="No tienes permisos para acceder a esta información"
