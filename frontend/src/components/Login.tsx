@@ -31,8 +31,12 @@ const Login: React.FC = () => {
       <div className="max-w-md w-full">
         {/* Logo y Header */}
         <div className="text-center mb-8">
-          <div className="mx-auto w-20 h-20 bg-white rounded-full flex items-center justify-center mb-4 shadow-lg">
-            <Shield className="w-10 h-10 text-hospital-blue" />
+          <div className="mx-auto w-20 h-20 bg-white rounded-full flex items-center justify-center mb-4 shadow-lg p-2">
+            <img 
+              src="/logo.png" 
+              alt="Logo Hospital" 
+              className="w-full h-full object-contain"
+            />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">
             Sistema de Consentimientos

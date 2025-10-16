@@ -432,7 +432,13 @@ const ConsentForm: React.FC = () => {
         <div className="card bg-gradient-to-r from-hospital-blue to-hospital-darkBlue text-white">
           <div className="flex flex-col sm:flex-row sm:items-center mb-4">
             <div className="flex items-center mb-3 sm:mb-0">
-              <Shield className="w-6 h-6 sm:w-8 sm:h-8 mr-3 flex-shrink-0" />
+              <div className="w-6 h-6 sm:w-8 sm:h-8 mr-3 flex-shrink-0">
+                <img 
+                  src="/logo.png" 
+                  alt="Logo Hospital" 
+                  className="w-full h-full object-contain filter brightness-0 invert"
+                />
+              </div>
               <div className="min-w-0 flex-1">
                 <h2 className="text-lg sm:text-xl font-bold truncate">{template.hospital_info.name}</h2>
                 <p className="text-blue-100 text-sm sm:text-base">NIT: {template.hospital_info.nit}</p>
@@ -814,64 +820,64 @@ const ConsentForm: React.FC = () => {
             ) : (
               // Campos normales cuando se acepta el consentimiento
               template.signature_blocks.map((block, index) => {
-                const isOptional = block.role === 'acompanante';
-                return (
-                  <div key={index} className="border border-gray-200 rounded-lg p-4">
-                    <h3 className="font-medium text-gray-900 mb-4">
-                      {block.label}
-                      {isOptional && (
-                        <span className="ml-2 text-sm text-gray-500 font-normal">(Opcional)</span>
-                      )}
-                    </h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <label className="label">
-                          NOMBRE Y APELLIDO
-                          {!isOptional && <span className="text-red-500 ml-1">*</span>}
-                        </label>
-                        <input
-                          {...register(`signatures.${block.role}_name`, { 
-                            required: isOptional ? false : `${block.label} - Nombre es requerido` 
-                          })}
-                          className="input-field"
-                          placeholder="Nombre completo"
-                        />
-                        {errors.signatures?.[`${block.role}_name`] && (
-                          <p className="text-red-500 text-sm mt-1">
-                            {String(errors.signatures[`${block.role}_name`]?.message || '')}
-                          </p>
-                        )}
-                      </div>
-                      <div>
-                        <label className="label">
-                          DOCUMENTO DE IDENTIDAD
-                          {!isOptional && <span className="text-red-500 ml-1">*</span>}
-                        </label>
-                        <input
-                          {...register(`signatures.${block.role}_document`, { 
-                            required: isOptional ? false : `${block.label} - Documento es requerido` 
-                          })}
-                          className="input-field"
-                          placeholder="Número de documento"
-                        />
-                        {errors.signatures?.[`${block.role}_document`] && (
-                          <p className="text-red-500 text-sm mt-1">
-                            {String(errors.signatures[`${block.role}_document`]?.message || '')}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    
+              const isOptional = block.role === 'acompanante';
+              return (
+                <div key={index} className="border border-gray-200 rounded-lg p-4">
+                  <h3 className="font-medium text-gray-900 mb-4">
+                    {block.label}
+                    {isOptional && (
+                      <span className="ml-2 text-sm text-gray-500 font-normal">(Opcional)</span>
+                    )}
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
-                      <SignaturePad
-                        label={isOptional ? "FIRMA DIGITAL (Opcional)" : "FIRMA DIGITAL"}
-                        onSave={(signatureData) => handleSignatureSave(block.role, signatureData)}
-                        existingSignature={signatures[`${block.role}_signature`]}
+                      <label className="label">
+                        NOMBRE Y APELLIDO
+                        {!isOptional && <span className="text-red-500 ml-1">*</span>}
+                      </label>
+                      <input
+                        {...register(`signatures.${block.role}_name`, { 
+                          required: isOptional ? false : `${block.label} - Nombre es requerido` 
+                        })}
+                        className="input-field"
+                        placeholder="Nombre completo"
                       />
+                      {errors.signatures?.[`${block.role}_name`] && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {String(errors.signatures[`${block.role}_name`]?.message || '')}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="label">
+                        DOCUMENTO DE IDENTIDAD
+                        {!isOptional && <span className="text-red-500 ml-1">*</span>}
+                      </label>
+                      <input
+                        {...register(`signatures.${block.role}_document`, { 
+                          required: isOptional ? false : `${block.label} - Documento es requerido` 
+                        })}
+                        className="input-field"
+                        placeholder="Número de documento"
+                      />
+                      {errors.signatures?.[`${block.role}_document`] && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {String(errors.signatures[`${block.role}_document`]?.message || '')}
+                        </p>
+                      )}
                     </div>
                   </div>
-                );
+                  
+                  <div>
+                    <SignaturePad
+                      label={isOptional ? "FIRMA DIGITAL (Opcional)" : "FIRMA DIGITAL"}
+                      onSave={(signatureData) => handleSignatureSave(block.role, signatureData)}
+                      existingSignature={signatures[`${block.role}_signature`]}
+                    />
+                  </div>
+                </div>
+              );
               })
             )}
           </div>
@@ -880,7 +886,7 @@ const ConsentForm: React.FC = () => {
 
         {/* Foto del Paciente - Solo cuando se acepta el consentimiento */}
         {consentValue === 'si' && (
-          <div className="card">
+        <div className="card">
             <PhotoCapture 
               onCapture={handlePhotoCapture}
               existingPhoto={patientPhoto || undefined}

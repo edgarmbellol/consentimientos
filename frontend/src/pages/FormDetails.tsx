@@ -143,7 +143,13 @@ const FormDetails: React.FC = () => {
       <div className="card bg-gradient-to-r from-hospital-blue to-hospital-darkBlue text-white print:bg-hospital-blue">
         <div className="flex flex-col sm:flex-row sm:items-center mb-4">
           <div className="flex items-center mb-3 sm:mb-0">
-            <Shield className="w-6 h-6 sm:w-8 sm:h-8 mr-3 flex-shrink-0" />
+            <div className="w-6 h-6 sm:w-8 sm:h-8 mr-3 flex-shrink-0">
+              <img 
+                src="/logo.png" 
+                alt="Logo Hospital" 
+                className="w-full h-full object-contain filter brightness-0 invert"
+              />
+            </div>
             <div className="min-w-0 flex-1">
               <h2 className="text-lg sm:text-xl font-bold truncate">{template.hospital_info.name}</h2>
               <p className="text-blue-100 text-sm sm:text-base">NIT: {template.hospital_info.nit}</p>

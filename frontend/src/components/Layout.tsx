@@ -66,8 +66,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center flex-1 min-w-0">
               <div className="flex items-center min-w-0">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-hospital-blue rounded-lg flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
-                  <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 mr-2 sm:mr-3 flex-shrink-0">
+                  <img 
+                    src="/logo.png" 
+                    alt="Logo Hospital" 
+                    className="w-full h-full object-contain rounded-lg"
+                  />
                 </div>
                 <div className="min-w-0 flex-1">
                   <h1 className="text-lg sm:text-xl font-bold text-hospital-darkBlue truncate">
