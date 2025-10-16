@@ -699,12 +699,25 @@ const TemplateBuilder: React.FC = () => {
           <h2 className="text-base sm:text-xl font-semibold text-hospital-darkBlue mb-3 sm:mb-4">
             Declaración de Consentimiento
           </h2>
-          <textarea
-            {...register('consent_statement', { required: 'La declaración de consentimiento es requerida' })}
-            className="input-field"
-            rows={4}
-            placeholder="Texto de la declaración de consentimiento..."
-          />
+          <div className="space-y-3">
+            <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
+              <p className="font-medium mb-2">Formato recomendado:</p>
+              <div className="text-xs font-mono bg-white p-2 rounded border">
+                DECLARO QUE:<br/>
+                1. Me ha explicado la naturaleza, propósito...<br/>
+                2. Así mismo se me ha explicado que no es posible...<br/>
+                3. Entiendo que en el curso del procedimiento...<br/>
+                4. Así mismo eximo al profesional...<br/>
+                5. Autorizo a los designados a realizarme...
+              </div>
+            </div>
+            <textarea
+              {...register('consent_statement', { required: 'La declaración de consentimiento es requerida' })}
+              className="input-field"
+              rows={8}
+              placeholder="DECLARO QUE:&#10;1. Me ha explicado la naturaleza, propósito, complicaciones, molestias y posibles riesgos del procedimiento; se me dio la oportunidad de hacer preguntas y me fueron contestadas satisfactoriamente.&#10;2. Así mismo se me ha explicado que no es posible garantizar los resultados esperados con el procedimiento.&#10;3. Entiendo que en el curso del procedimiento puedan presentarse situaciones imprevistas, que requieran procedimientos adicionales, por lo tanto, autorizo la realización de estos procedimientos.&#10;4. Así mismo eximo al profesional y a la institución de cualquier responsabilidad por los posibles riesgos y eventos adversos que se puedan presentar por no acatar las recomendaciones pre y pos tratamientos informados y descritos en la historia clínica, también es mi responsabilidad asumir el costo de los tratamientos que se encuentren excluidos del Plan Obligatorio de Salud.&#10;5. Autorizo a los designados a realizarme el siguiente procedimiento:"
+            />
+          </div>
           {errors.consent_statement && (
             <p className="text-red-500 text-sm mt-1">{errors.consent_statement.message}</p>
           )}

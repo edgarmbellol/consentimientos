@@ -22,6 +22,49 @@ interface FormData {
   signatures: Record<string, string>;
 }
 
+// Función para formatear el texto del consentimiento como lista numerada
+const formatConsentStatement = (text: string) => {
+  if (!text) return null;
+  
+  // Dividir el texto en líneas
+  const lines = text.split('\n').filter(line => line.trim() !== '');
+  
+  return lines.map((line, index) => {
+    const trimmedLine = line.trim();
+    
+    // Si la línea empieza con un número seguido de punto, tratarla como item numerado
+    if (/^\d+\./.test(trimmedLine)) {
+      const parts = trimmedLine.match(/^(\d+\.)\s*(.*)$/);
+      if (parts) {
+        return (
+          <div key={index} className="flex items-start">
+            <span className="font-semibold text-hospital-darkBlue mr-3 mt-0.5 flex-shrink-0">
+              {parts[1]}
+            </span>
+            <span className="flex-1">{parts[2]}</span>
+          </div>
+        );
+      }
+    }
+    
+    // Si la línea empieza con "DECLARO QUE:" o similar, tratarla como título
+    if (/^DECLARO QUE:?$/i.test(trimmedLine)) {
+      return (
+        <div key={index} className="font-semibold text-hospital-darkBlue mb-2">
+          {trimmedLine}
+        </div>
+      );
+    }
+    
+    // Para otras líneas, mostrarlas como párrafos normales
+    return (
+      <div key={index} className="text-gray-700">
+        {trimmedLine}
+      </div>
+    );
+  });
+};
+
 const ConsentForm: React.FC = () => {
   const { templateId } = useParams<{ templateId: string }>();
   const navigate = useNavigate();
@@ -32,6 +75,9 @@ const ConsentForm: React.FC = () => {
       signatures: {}
     }
   });
+
+  // Observar el valor del consentimiento para mostrar campos condicionales
+  const consentValue = watch('consent_responses.consent');
 
   const [template, setTemplate] = useState<ConsentTemplate | null>(null);
   const [loading, setLoading] = useState(true);
@@ -406,15 +452,6 @@ const ConsentForm: React.FC = () => {
           </div>
         </div>
 
-        {/* Foto del Paciente */}
-        <div className="card">
-          <PhotoCapture 
-            onCapture={handlePhotoCapture}
-            existingPhoto={patientPhoto || undefined}
-            label="Foto del Paciente"
-          />
-        </div>
-
         {/* Datos del Paciente */}
         <div className="card">
           <h2 className="text-xl font-semibold text-hospital-darkBlue mb-4 flex items-center">
@@ -458,82 +495,6 @@ const ConsentForm: React.FC = () => {
                 </div>
               ))}
           </div>
-        </div>
-
-        {/* Declaración de Consentimiento */}
-        <div className="card">
-          <h2 className="text-xl font-semibold text-hospital-darkBlue mb-4">
-            CONSENTIMIENTO INFORMADO
-          </h2>
-          
-          <div className="prose max-w-none mb-6">
-            <p className="text-gray-700 leading-relaxed">
-              {template.consent_statement}
-            </p>
-          </div>
-
-          <div className="flex items-center space-x-4 mb-4">
-            <label className="flex items-center">
-              <input
-                {...register('consent_responses.consent', { 
-                  required: 'Debe seleccionar una opción' 
-                })}
-                type="radio"
-                value="si"
-                className="border-gray-300 text-hospital-blue focus:ring-hospital-blue"
-              />
-              <span className="ml-2 text-green-600 font-medium">SÍ</span>
-            </label>
-            <label className="flex items-center">
-              <input
-                {...register('consent_responses.consent', { 
-                  required: 'Debe seleccionar una opción' 
-                })}
-                type="radio"
-                value="no"
-                className="border-gray-300 text-hospital-blue focus:ring-hospital-blue"
-              />
-              <span className="ml-2 text-red-600 font-medium">NO</span>
-            </label>
-          </div>
-          {errors.consent_responses?.consent && (
-            <p className="text-red-500 text-sm">{String(errors.consent_responses.consent.message || '')}</p>
-          )}
-        </div>
-
-        {/* Autorización Digital */}
-        <div className="card">
-          <h2 className="text-xl font-semibold text-hospital-darkBlue mb-4">
-            AUTORIZACIÓN DIGITAL
-          </h2>
-          
-          <div className="flex items-center space-x-4">
-            <label className="flex items-center">
-              <input
-                {...register('consent_responses.digital_authorization', { 
-                  required: 'Debe seleccionar una opción' 
-                })}
-                type="radio"
-                value="si"
-                className="border-gray-300 text-hospital-blue focus:ring-hospital-blue"
-              />
-              <span className="ml-2 text-green-600 font-medium">SÍ</span>
-            </label>
-            <label className="flex items-center">
-              <input
-                {...register('consent_responses.digital_authorization', { 
-                  required: 'Debe seleccionar una opción' 
-                })}
-                type="radio"
-                value="no"
-                className="border-gray-300 text-hospital-blue focus:ring-hospital-blue"
-              />
-              <span className="ml-2 text-red-600 font-medium">NO</span>
-            </label>
-          </div>
-          {errors.consent_responses?.digital_authorization && (
-            <p className="text-red-500 text-sm">{String(errors.consent_responses.digital_authorization.message || '')}</p>
-          )}
         </div>
 
         {/* Descripción del Procedimiento */}
@@ -619,58 +580,184 @@ const ConsentForm: React.FC = () => {
           </div>
         </div>
 
-        {/* Firmas */}
+        {/* Declaración de Consentimiento */}
         <div className="card">
           <h2 className="text-xl font-semibold text-hospital-darkBlue mb-4">
-            FIRMAS DEL CONSENTIMIENTO INFORMADO
+            CONSENTIMIENTO INFORMADO
           </h2>
           
+          <div className="mb-6">
+            <div className="text-gray-700 leading-relaxed space-y-3">
+              {formatConsentStatement(template.consent_statement)}
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-4 mb-4">
+            <label className="flex items-center">
+              <input
+                {...register('consent_responses.consent', { 
+                  required: 'Debe seleccionar una opción' 
+                })}
+                type="radio"
+                value="si"
+                className="border-gray-300 text-hospital-blue focus:ring-hospital-blue"
+              />
+              <span className="ml-2 text-green-600 font-medium">SÍ</span>
+            </label>
+            <label className="flex items-center">
+              <input
+                {...register('consent_responses.consent', { 
+                  required: 'Debe seleccionar una opción' 
+                })}
+                type="radio"
+                value="no"
+                className="border-gray-300 text-hospital-blue focus:ring-hospital-blue"
+              />
+              <span className="ml-2 text-red-600 font-medium">NO</span>
+            </label>
+          </div>
+          {errors.consent_responses?.consent && (
+            <p className="text-red-500 text-sm">{String(errors.consent_responses.consent.message || '')}</p>
+          )}
+        </div>
+
+        {/* Autorización Digital */}
+        <div className="card">
+          <h2 className="text-xl font-semibold text-hospital-darkBlue mb-4">
+            AUTORIZACIÓN PARA EL TRATAMIENTO DE DATOS PERSONALES
+          </h2>
+          
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <h3 className="font-semibold text-blue-900 mb-3">Política de Tratamiento de Datos Personales</h3>
+            <div className="text-sm text-blue-800 space-y-2">
+              <p>
+                <strong>Finalidad:</strong> Los datos personales recopilados en este formulario serán utilizados exclusivamente para el registro, seguimiento y control del procedimiento médico autorizado, así como para el cumplimiento de las obligaciones legales y regulatorias aplicables.
+              </p>
+              <p>
+                <strong>Tratamiento:</strong> Sus datos serán tratados de manera confidencial y segura, implementando las medidas técnicas y administrativas necesarias para garantizar su protección, conforme a la Ley 1581 de 2012 y el Decreto 1377 de 2013.
+              </p>
+              <p>
+                <strong>Conservación:</strong> Los datos serán conservados durante el tiempo que sea necesario para cumplir con las finalidades descritas y las obligaciones legales aplicables en materia de historia clínica.
+              </p>
+              <p>
+                <strong>Derechos:</strong> Usted tiene derecho a conocer, actualizar, rectificar y suprimir sus datos personales, así como a revocar la autorización otorgada, previo cumplimiento de los requisitos legales.
+              </p>
+            </div>
+          </div>
+          
+          <div className="mb-4">
+            <p className="text-gray-700 mb-3">
+              <strong>¿Autoriza el tratamiento de sus datos personales conforme a la política descrita anteriormente?</strong>
+            </p>
+            <div className="flex items-center space-x-4">
+              <label className="flex items-center">
+                <input
+                  {...register('consent_responses.digital_authorization', { 
+                    required: 'Debe seleccionar una opción' 
+                  })}
+                  type="radio"
+                  value="si"
+                  className="border-gray-300 text-hospital-blue focus:ring-hospital-blue"
+                />
+                <span className="ml-2 text-green-600 font-medium">SÍ, AUTORIZO</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  {...register('consent_responses.digital_authorization', { 
+                    required: 'Debe seleccionar una opción' 
+                  })}
+                  type="radio"
+                  value="no"
+                  className="border-gray-300 text-hospital-blue focus:ring-hospital-blue"
+                />
+                <span className="ml-2 text-red-600 font-medium">NO AUTORIZO</span>
+              </label>
+            </div>
+          </div>
+          
+          {errors.consent_responses?.digital_authorization && (
+            <p className="text-red-500 text-sm">{String(errors.consent_responses.digital_authorization.message || '')}</p>
+          )}
+        </div>
+
+        {/* Revocación - Solo cuando se rechaza el consentimiento */}
+        {consentValue === 'no' && (
+          <div className="card">
+            <h2 className="text-xl font-semibold text-hospital-darkBlue mb-4">
+              REVOCATORIA DEL CONSENTIMIENTO
+            </h2>
+            <div className="prose max-w-none">
+              <p className="text-gray-700 leading-relaxed">
+                {template.revocation_statement}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Firmas - Solo cuando se ha seleccionado una opción */}
+        {consentValue && (
+          <div className="card">
+            <h2 className="text-xl font-semibold text-hospital-darkBlue mb-4">
+              {consentValue === 'no' ? 'FIRMAS - RECHAZO DEL CONSENTIMIENTO' : 'FIRMAS DEL CONSENTIMIENTO INFORMADO'}
+            </h2>
+            
+            {consentValue === 'no' && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertCircle className="w-5 h-5 text-red-600" />
+                  <h3 className="font-semibold text-red-900">Consentimiento Rechazado</h3>
+                </div>
+                <p className="text-sm text-red-800">
+                  Al rechazar el consentimiento, el procedimiento no podrá ser realizado. 
+                  Por favor, firme a continuación para confirmar su decisión.
+                </p>
+              </div>
+            )}
+          
           <div className="space-y-6">
-            {template.signature_blocks.map((block, index) => {
-              const isOptional = block.role === 'acompanante';
-              return (
-                <div key={index} className="border border-gray-200 rounded-lg p-4">
+            {consentValue === 'no' ? (
+              // Campos para cuando se rechaza el consentimiento
+              <>
+                {/* Persona Responsable o Usuario */}
+                <div className="border border-gray-200 rounded-lg p-4">
                   <h3 className="font-medium text-gray-900 mb-4">
-                    {block.label}
-                    {isOptional && (
-                      <span className="ml-2 text-sm text-gray-500 font-normal">(Opcional)</span>
-                    )}
+                    PERSONA RESPONSABLE O USUARIO
                   </h3>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
                       <label className="label">
                         NOMBRE Y APELLIDO
-                        {!isOptional && <span className="text-red-500 ml-1">*</span>}
+                        <span className="text-red-500 ml-1">*</span>
                       </label>
                       <input
-                        {...register(`signatures.${block.role}_name`, { 
-                          required: isOptional ? false : `${block.label} - Nombre es requerido` 
+                        {...register('signatures.responsable_name', { 
+                          required: 'Nombre de la persona responsable es requerido' 
                         })}
                         className="input-field"
                         placeholder="Nombre completo"
                       />
-                      {errors.signatures?.[`${block.role}_name`] && (
+                      {errors.signatures?.responsable_name && (
                         <p className="text-red-500 text-sm mt-1">
-                          {String(errors.signatures[`${block.role}_name`]?.message || '')}
+                          {String(errors.signatures.responsable_name?.message || '')}
                         </p>
                       )}
                     </div>
                     <div>
                       <label className="label">
                         DOCUMENTO DE IDENTIDAD
-                        {!isOptional && <span className="text-red-500 ml-1">*</span>}
+                        <span className="text-red-500 ml-1">*</span>
                       </label>
                       <input
-                        {...register(`signatures.${block.role}_document`, { 
-                          required: isOptional ? false : `${block.label} - Documento es requerido` 
+                        {...register('signatures.responsable_document', { 
+                          required: 'Documento de la persona responsable es requerido' 
                         })}
                         className="input-field"
                         placeholder="Número de documento"
                       />
-                      {errors.signatures?.[`${block.role}_document`] && (
+                      {errors.signatures?.responsable_document && (
                         <p className="text-red-500 text-sm mt-1">
-                          {String(errors.signatures[`${block.role}_document`]?.message || '')}
+                          {String(errors.signatures.responsable_document?.message || '')}
                         </p>
                       )}
                     </div>
@@ -678,28 +765,129 @@ const ConsentForm: React.FC = () => {
                   
                   <div>
                     <SignaturePad
-                      label={isOptional ? "FIRMA DIGITAL (Opcional)" : "FIRMA DIGITAL"}
-                      onSave={(signatureData) => handleSignatureSave(block.role, signatureData)}
-                      existingSignature={signatures[`${block.role}_signature`]}
+                      label="FIRMA DIGITAL"
+                      onSave={(signatureData) => handleSignatureSave('responsable', signatureData)}
+                      existingSignature={signatures['responsable_signature']}
                     />
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </div>
 
-        {/* Revocación */}
-        <div className="card">
-          <h2 className="text-xl font-semibold text-hospital-darkBlue mb-4">
-            REVOCATORIA DEL CONSENTIMIENTO
-          </h2>
-          <div className="prose max-w-none">
-            <p className="text-gray-700 leading-relaxed">
-              {template.revocation_statement}
-            </p>
+                {/* Acompañante (Opcional) */}
+                <div className="border border-gray-200 rounded-lg p-4">
+                  <h3 className="font-medium text-gray-900 mb-4">
+                    ACOMPAÑANTE
+                    <span className="ml-2 text-sm text-gray-500 font-normal">(Opcional)</span>
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="label">
+                        NOMBRE Y APELLIDO
+                      </label>
+                      <input
+                        {...register('signatures.acompanante_name')}
+                        className="input-field"
+                        placeholder="Nombre completo"
+                      />
+                    </div>
+                    <div>
+                      <label className="label">
+                        DOCUMENTO DE IDENTIDAD
+                      </label>
+                      <input
+                        {...register('signatures.acompanante_document')}
+                        className="input-field"
+                        placeholder="Número de documento"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <SignaturePad
+                      label="FIRMA DIGITAL (Opcional)"
+                      onSave={(signatureData) => handleSignatureSave('acompanante', signatureData)}
+                      existingSignature={signatures['acompanante_signature']}
+                    />
+                  </div>
+                </div>
+              </>
+            ) : (
+              // Campos normales cuando se acepta el consentimiento
+              template.signature_blocks.map((block, index) => {
+                const isOptional = block.role === 'acompanante';
+                return (
+                  <div key={index} className="border border-gray-200 rounded-lg p-4">
+                    <h3 className="font-medium text-gray-900 mb-4">
+                      {block.label}
+                      {isOptional && (
+                        <span className="ml-2 text-sm text-gray-500 font-normal">(Opcional)</span>
+                      )}
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label className="label">
+                          NOMBRE Y APELLIDO
+                          {!isOptional && <span className="text-red-500 ml-1">*</span>}
+                        </label>
+                        <input
+                          {...register(`signatures.${block.role}_name`, { 
+                            required: isOptional ? false : `${block.label} - Nombre es requerido` 
+                          })}
+                          className="input-field"
+                          placeholder="Nombre completo"
+                        />
+                        {errors.signatures?.[`${block.role}_name`] && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {String(errors.signatures[`${block.role}_name`]?.message || '')}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="label">
+                          DOCUMENTO DE IDENTIDAD
+                          {!isOptional && <span className="text-red-500 ml-1">*</span>}
+                        </label>
+                        <input
+                          {...register(`signatures.${block.role}_document`, { 
+                            required: isOptional ? false : `${block.label} - Documento es requerido` 
+                          })}
+                          className="input-field"
+                          placeholder="Número de documento"
+                        />
+                        {errors.signatures?.[`${block.role}_document`] && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {String(errors.signatures[`${block.role}_document`]?.message || '')}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <SignaturePad
+                        label={isOptional ? "FIRMA DIGITAL (Opcional)" : "FIRMA DIGITAL"}
+                        onSave={(signatureData) => handleSignatureSave(block.role, signatureData)}
+                        existingSignature={signatures[`${block.role}_signature`]}
+                      />
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
+        )}
+
+        {/* Foto del Paciente - Solo cuando se acepta el consentimiento */}
+        {consentValue === 'si' && (
+          <div className="card">
+            <PhotoCapture 
+              onCapture={handlePhotoCapture}
+              existingPhoto={patientPhoto || undefined}
+              label="Foto del Paciente al momento de firmar el consentimiento"
+            />
+          </div>
+        )}
 
         {/* Botones de Acción */}
         <div className="flex flex-col sm:flex-row sm:justify-end gap-3 sm:gap-4">
