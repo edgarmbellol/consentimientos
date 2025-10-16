@@ -48,8 +48,8 @@ const ConsentFormList: React.FC = () => {
 
   const filteredForms = forms.filter(form => 
     form.template_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    form.patient_data.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    form.patient_data['N° DE IDENTIFICACIÓN']?.toString().includes(searchTerm)
+    form.patient_data['2']?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    form.patient_data['1']?.toString().includes(searchTerm)
   );
 
   if (loading) {
@@ -148,13 +148,13 @@ const ConsentFormList: React.FC = () => {
                     <div className="flex items-center min-w-0">
                       <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0" />
                       <span className="truncate">
-                        <strong className="font-medium">Paciente:</strong> {form.patient_data.nombre || form.patient_data['NOMBRE'] || 'No especificado'}
+                        <strong className="font-medium">Paciente:</strong> {form.patient_data['2'] || 'No especificado'}
                       </span>
                     </div>
                     <div className="flex items-center min-w-0">
                       <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0" />
                       <span className="truncate">
-                        <strong className="font-medium">Doc:</strong> {form.patient_data['N° DE IDENTIFICACIÓN'] || 'No especificado'}
+                        <strong className="font-medium">Doc:</strong> {form.patient_data['1'] || 'No especificado'}
                       </span>
                     </div>
                     <div className="flex items-center min-w-0">
