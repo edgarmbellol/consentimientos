@@ -351,14 +351,138 @@ const FormDetails: React.FC = () => {
         </div>
       </div>
 
+      {/* Revocación - Solo cuando se rechazó el consentimiento */}
+      {form.consent_responses.consent === 'no' && (
+        <div className="card">
+          <h2 className="text-xl font-semibold text-hospital-darkBlue mb-4">
+            REVOCATORIA DEL CONSENTIMIENTO
+          </h2>
+          <div className="prose max-w-none">
+            <p className="text-gray-700 leading-relaxed">
+              {template.revocation_statement}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Firmas */}
       <div className="card">
         <h2 className="text-xl font-semibold text-hospital-darkBlue mb-4">
-          FIRMAS DEL CONSENTIMIENTO INFORMADO
+          {form.consent_responses.consent === 'no' ? 'FIRMAS - RECHAZO DEL CONSENTIMIENTO' : 'FIRMAS DEL CONSENTIMIENTO INFORMADO'}
         </h2>
         
         <div className="space-y-6">
-          {template.signature_blocks.map((block, index) => {
+          {form.consent_responses.consent === 'no' ? (
+            // Firmas para cuando se rechaza el consentimiento
+            <>
+              {/* Persona Responsable o Usuario */}
+              {(form.signatures.responsable_name || form.signatures.responsable_signature) && (
+                <div className="border border-gray-200 rounded-lg p-4">
+                  <h3 className="font-medium text-gray-900 mb-4">
+                    PERSONA RESPONSABLE O USUARIO
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="label text-gray-700">NOMBRE Y APELLIDO</label>
+                      <div className="p-3 bg-gray-50 rounded-lg border">
+                        <span className="text-gray-900">
+                          {form.signatures.responsable_name || 'No especificado'}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="label text-gray-700">DOCUMENTO DE IDENTIDAD</label>
+                      <div className="p-3 bg-gray-50 rounded-lg border">
+                        <span className="text-gray-900">
+                          {form.signatures.responsable_document || 'No especificado'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="label text-gray-700">FIRMA DIGITAL</label>
+                    {(() => {
+                      const signatureData = form.signatures.responsable_signature;
+                      if (signatureData && signatureData.trim() !== '' && signatureData !== 'null' && signatureData !== 'undefined') {
+                        return (
+                          <div className="p-4 bg-gray-50 rounded-lg border">
+                            <img 
+                              src={signatureData} 
+                              alt="Firma de Persona Responsable"
+                              className="signature-print max-h-32 mx-auto"
+                            />
+                          </div>
+                        );
+                      } else {
+                        return (
+                          <div className="p-4 bg-gray-50 rounded-lg border border-dashed">
+                            <span className="text-gray-500">Firma no disponible</span>
+                          </div>
+                        );
+                      }
+                    })()}
+                  </div>
+                </div>
+              )}
+
+              {/* Acompañante (Opcional) */}
+              {(form.signatures.acompanante_name || form.signatures.acompanante_signature) && (
+                <div className="border border-gray-200 rounded-lg p-4">
+                  <h3 className="font-medium text-gray-900 mb-4">
+                    ACOMPAÑANTE
+                    <span className="ml-2 text-sm text-gray-500 font-normal">(Opcional)</span>
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="label text-gray-700">NOMBRE Y APELLIDO</label>
+                      <div className="p-3 bg-gray-50 rounded-lg border">
+                        <span className="text-gray-900">
+                          {form.signatures.acompanante_name || 'No especificado'}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="label text-gray-700">DOCUMENTO DE IDENTIDAD</label>
+                      <div className="p-3 bg-gray-50 rounded-lg border">
+                        <span className="text-gray-900">
+                          {form.signatures.acompanante_document || 'No especificado'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="label text-gray-700">FIRMA DIGITAL (Opcional)</label>
+                    {(() => {
+                      const signatureData = form.signatures.acompanante_signature;
+                      if (signatureData && signatureData.trim() !== '' && signatureData !== 'null' && signatureData !== 'undefined') {
+                        return (
+                          <div className="p-4 bg-gray-50 rounded-lg border">
+                            <img 
+                              src={signatureData} 
+                              alt="Firma de Acompañante"
+                              className="signature-print max-h-32 mx-auto"
+                            />
+                          </div>
+                        );
+                      } else {
+                        return (
+                          <div className="p-4 bg-gray-50 rounded-lg border border-dashed">
+                            <span className="text-gray-500">Sin firma (opcional)</span>
+                          </div>
+                        );
+                      }
+                    })()}
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            // Firmas normales cuando se acepta el consentimiento
+            template.signature_blocks.map((block, index) => {
             const isOptional = block.role === 'acompanante';
             return (
               <div key={index} className="border border-gray-200 rounded-lg p-4">
@@ -442,19 +566,8 @@ const FormDetails: React.FC = () => {
               </div>
               </div>
             );
-          })}
-        </div>
-      </div>
-
-      {/* Revocación */}
-      <div className="card">
-        <h2 className="text-xl font-semibold text-hospital-darkBlue mb-4">
-          REVOCATORIA DEL CONSENTIMIENTO
-        </h2>
-        <div className="prose max-w-none">
-          <p className="text-gray-700 leading-relaxed">
-            {template.revocation_statement}
-          </p>
+          })
+          )}
         </div>
       </div>
 
