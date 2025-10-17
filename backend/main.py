@@ -29,7 +29,7 @@ create_tables()
 # Configurar CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Frontend React
+    allow_origins=["http://localhost:3001"],  # Frontend React
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
