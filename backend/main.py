@@ -6,6 +6,7 @@ from typing import List, Optional, Dict, Any
 import uuid
 from datetime import datetime
 import json
+import os
 from sqlalchemy.orm import Session
 
 # Importar configuración de base de datos
@@ -20,6 +21,9 @@ from database import (
     log_audit,
     get_patient_info
 )
+
+from pdf_generator import generate_consent_form_pdf
+from fastapi.responses import StreamingResponse
 
 app = FastAPI(title="Sistema de Consentimientos Informados", version="1.0.0")
 
@@ -679,6 +683,87 @@ async def delete_consent_form(
     db.commit()
     
     return {"message": "Formulario eliminado exitosamente"}
+
+@app.get("/api/consent-forms/{form_id}/pdf")
+async def download_consent_form_pdf(
+    form_id: str,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Descargar formulario de consentimiento como PDF"""
+    # Obtener el formulario
+    form = db.query(ConsentFormDB).filter(ConsentFormDB.id == form_id).first()
+    
+    if not form:
+        raise HTTPException(status_code=404, detail="Formulario no encontrado")
+    
+    # Obtener la plantilla
+    template = db.query(ConsentTemplateDB).filter(ConsentTemplateDB.id == form.template_id).first()
+    
+    if not template:
+        raise HTTPException(status_code=404, detail="Plantilla no encontrada")
+    
+    # Preparar datos para el PDF
+    form_data = {
+        'patient_data': text_to_json(form.patient_data) or {},
+        'patient_photo': form.patient_photo,
+        'consent_responses': text_to_json(form.consent_responses) or {},
+        'signatures': text_to_json(form.signatures) or {}
+    }
+    
+    template_data = {
+        'title': template.title,
+        'description': template.description,
+        'hospital_info': text_to_json(template.hospital_info) or {},
+        'document_metadata': text_to_json(template.document_metadata) or {},
+        'patient_fields': text_to_json(template.patient_fields) or [],
+        'procedure_description': template.procedure_description or '',
+        'benefits_risks_alternatives': text_to_json(template.benefits_risks_alternatives) or {},
+        'implications': template.implications or '',
+        'recommendations': template.recommendations or '',
+        'consent_statement': template.consent_statement or '',
+        'revocation_statement': template.revocation_statement or ''
+    }
+    
+    # Generar PDF
+    try:
+        # Ruta al logo (si existe)
+        logo_path = './logo.png' if os.path.exists('./logo.png') else None
+        
+        pdf_buffer = generate_consent_form_pdf(form_data, template_data, logo_path)
+        
+        # Registrar en auditoría
+        patient_data = form_data['patient_data']
+        log_audit(
+            db=db,
+            username=current_user["username"],
+            action="download_pdf",
+            resource_type="consent_form",
+            resource_id=form_id,
+            details={
+                "template_title": template.title,
+                "patient_name": patient_data.get("2", "N/A")  # Campo 2 es el nombre
+            }
+        )
+        
+        # Generar nombre del archivo
+        patient_name = patient_data.get("2", "paciente").replace(" ", "_")
+        patient_doc = patient_data.get("1", "")
+        filename = f"Consentimiento_{patient_name}_{patient_doc}_{form_id[:8]}.pdf"
+        
+        # Retornar el PDF
+        return StreamingResponse(
+            pdf_buffer,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}"
+            }
+        )
+    except Exception as e:
+        print(f"Error generando PDF: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error al generar el PDF: {str(e)}")
 
 # Modelos para auditoría
 class AuditLogResponse(BaseModel):

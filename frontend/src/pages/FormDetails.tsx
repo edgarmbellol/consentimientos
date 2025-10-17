@@ -9,7 +9,6 @@ import {
   Calendar,
   User,
   FileText,
-  Shield,
   CheckCircle,
   AlertCircle,
   XCircle
@@ -47,6 +46,34 @@ const FormDetails: React.FC = () => {
     }
   };
 
+  const handleDownloadPDF = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:8001/api/consent-forms/${formId}/pdf`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Error al descargar el PDF');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Consentimiento_${form?.patient_data['2']?.replace(' ', '_') || 'formulario'}_${formId?.substring(0, 8) || 'unknown'}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error al descargar PDF:', error);
+      alert('Error al descargar el PDF. Por favor, inténtalo nuevamente.');
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-CO', {
       year: 'numeric',
@@ -59,11 +86,6 @@ const FormDetails: React.FC = () => {
 
   const handlePrint = () => {
     window.print();
-  };
-
-  const handleDownload = () => {
-    // En una implementación real, aquí se generaría un PDF
-    alert('Funcionalidad de descarga en desarrollo');
   };
 
   if (loading) {
@@ -119,7 +141,7 @@ const FormDetails: React.FC = () => {
               Imprimir
             </button>
             <button
-              onClick={handleDownload}
+              onClick={handleDownloadPDF}
               className="btn-primary flex items-center justify-center w-full sm:w-auto"
             >
               <Download className="w-4 h-4 mr-2" />

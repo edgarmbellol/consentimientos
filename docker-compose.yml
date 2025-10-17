@@ -23,6 +23,9 @@ services:
       - REACT_APP_API_URL=http://localhost:8001
       - CHOKIDAR_USEPOLLING=true
       - WATCHPACK_POLLING=true
+      - WDS_SOCKET_PORT=3001
+      - WDS_SOCKET_HOST=localhost
+      - FAST_REFRESH=true
     volumes:
       - ./frontend/src:/app/src
       - ./frontend/public:/app/public
